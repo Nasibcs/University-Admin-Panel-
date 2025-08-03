@@ -2,13 +2,15 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
-import WhatsAppButton from "../components/WhatsappButton/WhatsappButton";
+// import WhatsAppButton from "../components/WhatsappButton/WhatsappButton";
 
 interface AdminProfile {
   username: string;
   email: string;
   profilePicture: string;
 }
+
+import DarkModeNew from "../components/DarkModeNew";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -182,11 +184,12 @@ const AdminLayout = () => {
         </div>
 
         {/* Mobile/Tablet Footer with Contact and Dark Mode */}
-        <div className="mt-auto">
-          <WhatsAppButton />
-          <div className="p-4 border-t border-slate-700 dark:border-gray-700">
+        <div className="mt-auto md:hidden">
+          <div className="p-4 border-t border-slate-700 dark:border-gray-700 flex flex-col gap-4 items-center">
+            <DarkModeNew />
           </div>
         </div>
+
       </aside>
 
       {/* Main Content */}

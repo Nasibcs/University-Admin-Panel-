@@ -31,7 +31,7 @@ export default function DarkModeNew() {
         <button
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-            className="bg-gray-900 dark:bg-yellow-400 p-2 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 fixed bottom-10 right-20"
+            className="bg-gray-900 dark:bg-yellow-400 p-2 rounded-full shadow-lg hover:shadow-xl transition-shadow duration-300 w-full mt-2"
         >
             {theme === "dark" ? (
                 <CiLight className="text-2xl text-black" />

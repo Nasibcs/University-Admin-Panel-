@@ -8,7 +8,7 @@ import {
   FiUsers,
   FiBookOpen,
 } from "react-icons/fi";
-import DarkModeNew from "../components/DarkModeNew";
+// import DarkModeNew from "../components/DarkModeNew";
 
 type EntityCounts = {
   faculties: number;
