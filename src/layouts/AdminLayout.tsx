@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave } from "react-icons/fa";
+import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
 import DarkModeNew from "../components/DarkModeNew";
 
@@ -9,6 +9,32 @@ interface AdminProfile {
   email: string;
   profilePicture: string;
 }
+
+const ContactUs = () => {
+  return (
+    <div className="mt-auto p-4 border-t border-slate-700 dark:border-gray-700">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-white dark:text-gray-200 mb-2">Contact Developer</h3>
+        <p className="text-xs text-gray-300 dark:text-gray-400 mb-3">
+          Need help? Contact me directly on WhatsApp for quick support.
+        </p>
+        <a
+          href="https://wa.me/1234567890" // Replace with your WhatsApp number
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
+        >
+          <FaWhatsapp className="text-lg" />
+          WhatsApp Support
+        </a>
+      </div>
+      <div className="text-xs text-gray-300 dark:text-gray-400">
+        <p>Academic Portal v1.0</p>
+        <p>© {new Date().getFullYear()} All rights reserved</p>
+      </div>
+    </div>
+  );
+};
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -105,81 +131,90 @@ const AdminLayout = () => {
   return (
     <div className="dark:bg-gray-900 flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-     <aside
-  ref={sidebarRef}
-  className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-slate-700 to-slate-800 dark:bg-gray-800 shadow-lg transform ${
-    sidebarOpen ? "translate-x-0" : "-translate-x-full"
-  } transition-transform duration-300 ease-in-out md:translate-x-0 md:static`} // ✅ UPDATED
->
-  <div className="dark:bg-slate-800 p-4 text-xl font-bold text-white border-b border-slate-700 flex items-center gap-2"> {/* ✅ UPDATED */}
-    <FaUniversity className="text-2xl" />
-    <span>Application Admin</span>
-  </div>
-  <nav className="flex flex-col gap-1 p-4">
-    <NavLink 
-      to="/dashboard" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <MdDashboard className="text-lg" />
-      Dashboard
-    </NavLink>
-    <NavLink 
-      to="/dashboard/faculties" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <FaGraduationCap className="text-lg" />
-      Faculties
-    </NavLink>
-    <NavLink 
-      to="/dashboard/departments" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <MdSchool className="text-lg" />
-      Departments
-    </NavLink>
-    <NavLink 
-      to="/dashboard/teachers" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <FaChalkboardTeacher className="text-lg" />
-      Teachers
-    </NavLink>
-    <NavLink 
-      to="/dashboard/semesters" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <FaBook className="text-lg" />
-      Semesters
-    </NavLink>
-    <NavLink 
-      to="/dashboard/books" 
-      className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-        isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
-      }`} // ✅ UPDATED
-    >
-      <MdLibraryBooks className="text-lg" />
-      Books
-    </NavLink>
-    <button
-      onClick={() => setProfileModalOpen(true)}
-      className="flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors mt-4" // ✅ UPDATED
-    >
-      <MdSettings className="text-lg" />
-      Profile Settings
-    </button>
-  </nav>
-</aside>
+      <aside
+        ref={sidebarRef}
+        className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-slate-700 to-slate-800 dark:bg-gray-800 shadow-lg transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
+      >
+        <div className="flex-1">
+          <div className="dark:bg-slate-800 p-4 text-xl font-bold text-white border-b border-slate-700 flex items-center gap-2">
+            <FaUniversity className="text-2xl" />
+            <span>Application Admin</span>
+          </div>
+          <nav className="flex flex-col gap-1 p-4">
+            <NavLink 
+              to="/dashboard" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <MdDashboard className="text-lg" />
+              Dashboard
+            </NavLink>
+            <NavLink 
+              to="/dashboard/faculties" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <FaGraduationCap className="text-lg" />
+              Faculties
+            </NavLink>
+            <NavLink 
+              to="/dashboard/departments" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <MdSchool className="text-lg" />
+              Departments
+            </NavLink>
+            <NavLink 
+              to="/dashboard/teachers" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <FaChalkboardTeacher className="text-lg" />
+              Teachers
+            </NavLink>
+            <NavLink 
+              to="/dashboard/semesters" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <FaBook className="text-lg" />
+              Semesters
+            </NavLink>
+            <NavLink 
+              to="/dashboard/books" 
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
+                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              }`}
+            >
+              <MdLibraryBooks className="text-lg" />
+              Books
+            </NavLink>
+            <button
+              onClick={() => setProfileModalOpen(true)}
+              className="flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors mt-4"
+            >
+              <MdSettings className="text-lg" />
+              Profile Settings
+            </button>
+          </nav>
+        </div>
 
+        {/* Mobile/Tablet Footer with Contact and Dark Mode */}
+        <div className="md:hidden">
+          <ContactUs />
+          <div className="p-4 border-t border-slate-700 dark:border-gray-700">
+            <DarkModeNew />
+          </div>
+        </div>
+      </aside>
 
       {/* Main Content */}
       <div className="dark:bg-gray-900 flex-1 flex flex-col overflow-hidden">
@@ -191,7 +226,7 @@ const AdminLayout = () => {
           >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <FaUniversity className="text-blue-600 dark:text-blue-400" />
             Admin
           </h2>
@@ -382,7 +417,6 @@ const AdminLayout = () => {
               </form>
             </div>
           </div>
-          <DarkModeNew/>  
         </div>
       )}
     </div>

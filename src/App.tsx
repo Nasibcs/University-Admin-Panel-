@@ -1,4 +1,3 @@
-import DarkModeNew from "./components/DarkModeNew"
 import WhatsAppButton from "./components/WhatsappButton/WhatsappButton"
 import AppRouter from "./routes/AppRouter"
 
@@ -7,7 +6,6 @@ function App() {
   <>
     <AppRouter />
      <WhatsAppButton/>
-     <DarkModeNew/>
 
      </>
   )
