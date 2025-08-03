@@ -2,7 +2,6 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
-import DarkModeNew from "../components/DarkModeNew";
 
 interface AdminProfile {
   username: string;
@@ -211,7 +210,6 @@ const AdminLayout = () => {
         <div className="mt-auto">
           <ContactUs />
           <div className="p-4 border-t border-slate-700 dark:border-gray-700">
-            <DarkModeNew />
           </div>
         </div>
       </aside>
@@ -277,7 +275,7 @@ const AdminLayout = () => {
             </button>
           </div>
         </header>
-
+         
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900">
           <div className="max-w-7xl mx-auto">

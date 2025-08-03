@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import DarkModeNew from "../components/DarkModeNew.tsx";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -332,7 +331,6 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <DarkModeNew />
     </div>
   );
 };
