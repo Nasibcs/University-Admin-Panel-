@@ -273,7 +273,7 @@ const Dashboard = () => {
         </motion.div>
       </main>
 
-      <DarkModeNew />
+      {/* Remove DarkModeNew and WhatsAppButton from DashboardPage. These should be in the sidebar for mobile/tablet screens only. */}
     </div>
   );
 };
