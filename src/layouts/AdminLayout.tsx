@@ -18,7 +18,7 @@ const ContactUs = () => {
           Need help? Contact me directly on WhatsApp for quick support.
         </p>
         <a
-          href="https://wa.me/1234567890" // Replace with your WhatsApp number
+          href="https://wa.me/+93795582109" // Replace with your WhatsApp number
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
