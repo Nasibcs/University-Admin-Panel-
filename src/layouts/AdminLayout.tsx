@@ -208,7 +208,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Mobile/Tablet Footer with Contact and Dark Mode */}
-        <div className="md:hidden">
+        <div className="mt-auto">
           <ContactUs />
           <div className="p-4 border-t border-slate-700 dark:border-gray-700">
             <DarkModeNew />
