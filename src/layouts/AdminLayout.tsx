@@ -2,38 +2,13 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
+import WhatsAppButton from "../components/WhatsappButton/WhatsappButton";
 
 interface AdminProfile {
   username: string;
   email: string;
   profilePicture: string;
 }
-
-const ContactUs = () => {
-  return (
-    <div className="mt-auto p-4 border-t border-slate-700 dark:border-gray-700">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-white dark:text-gray-200 mb-2">Contact Developer</h3>
-        <p className="text-xs text-gray-300 dark:text-gray-400 mb-3">
-          Need help? Contact me directly on WhatsApp for quick support.
-        </p>
-        <a
-          href="https://wa.me/+93795582109" // Replace with your WhatsApp number
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
-        >
-          <FaWhatsapp className="text-lg" />
-          WhatsApp Support
-        </a>
-      </div>
-      <div className="text-xs text-gray-300 dark:text-gray-400">
-        <p>Academic Portal v1.0</p>
-        <p>© {new Date().getFullYear()} All rights reserved</p>
-      </div>
-    </div>
-  );
-};
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -208,7 +183,7 @@ const AdminLayout = () => {
 
         {/* Mobile/Tablet Footer with Contact and Dark Mode */}
         <div className="mt-auto">
-          <ContactUs />
+          <WhatsAppButton />
           <div className="p-4 border-t border-slate-700 dark:border-gray-700">
           </div>
         </div>

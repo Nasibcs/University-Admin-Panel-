@@ -11,7 +11,7 @@ import DashboardComponent from "../pages/DashboardPage";
 const AppRouter = () => {
   return (
     <div className="dark:bg-gray-900 min-h-screen">
-      <BrowserRouter>
+      <BrowserRouter basename="/University-Admin-Panel-">
         <Routes>
           <Route path="/" element={<LoginPage />} />
 
