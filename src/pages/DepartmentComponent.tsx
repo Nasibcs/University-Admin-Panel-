@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { v4 as uuid } from "uuid";
 import { Link } from "react-router-dom";
 
@@ -54,7 +54,7 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T) => vo
 const DepartmentComponent = () => {
   // State with localStorage persistence
   const [departments, setDepartments] = useLocalStorage<Department[]>("departments", []);
-  const [faculties, setFaculties] = useLocalStorage<Faculty[]>("faculties", []);
+  const [faculties] = useLocalStorage<Faculty[]>("faculties", []);
   const [teachersData, setTeachersData] = useLocalStorage<Teacher[]>("teachers", []);
   
   const [facultyIdForDepartment, setFacultyIdForDepartment] = useState("");
