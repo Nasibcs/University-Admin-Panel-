@@ -105,115 +105,108 @@ const AdminLayout = () => {
   return (
     <div className="dark:bg-gray-900 flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <aside
-        ref={sidebarRef}
-        className={`fixed z-40 top-0 left-0 h-full w-72 bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-900 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 shadow-2xl rounded-r-3xl border-r-2 border-indigo-700 dark:border-gray-800 transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
+    <aside
+  ref={sidebarRef}
+  className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-800 to-indigo-900 dark:from-gray-800 dark:to-gray-900 shadow-lg transform ${
+    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+  } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
+>
+  <div className="flex-1 flex flex-col">
+    <div className="p-4 text-xl font-bold text-white border-b border-indigo-700 dark:border-gray-700 flex items-center gap-2">
+      <FaUniversity className="text-2xl text-indigo-300" />
+      <span>Application Admin</span>
+    </div>
+    
+    <nav className="flex flex-col gap-1 p-4 flex-grow">
+      <NavLink 
+        to="/dashboard" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
       >
-        <div className="flex-1 overflow-y-auto">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3 p-6 pb-4 border-b border-indigo-700 dark:border-gray-700">
-            <img src="/favicon/favicon.svg" alt="Logo" className="w-10 h-10 rounded-full shadow-lg border-2 border-indigo-400 dark:border-gray-700 bg-white" />
-            <span className="text-2xl font-bold text-white tracking-wide">Univ Admin</span>
-          </div>
+        <MdDashboard className="text-lg" />
+        Dashboard
+      </NavLink>
+      <NavLink 
+        to="/dashboard/faculties" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
+      >
+        <FaGraduationCap className="text-lg" />
+        Faculties
+      </NavLink>
+      <NavLink 
+        to="/dashboard/departments" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
+      >
+        <MdSchool className="text-lg" />
+        Departments
+      </NavLink>
+      <NavLink 
+        to="/dashboard/teachers" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
+      >
+        <FaChalkboardTeacher className="text-lg" />
+        Teachers
+      </NavLink>
+      <NavLink 
+        to="/dashboard/semesters" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
+      >
+        <FaBook className="text-lg" />
+        Semesters
+      </NavLink>
+      <NavLink 
+        to="/dashboard/books" 
+        className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors ${
+          isActive ? "bg-indigo-700/80 dark:bg-gray-700/80 font-medium shadow-md" : ""
+        }`}
+      >
+        <MdLibraryBooks className="text-lg" />
+        Books
+      </NavLink>
+    </nav>
 
-          {/* Dark Mode Toggle - Desktop */}
-          <div className="hidden md:flex items-center justify-center p-3 border-b border-indigo-700 dark:border-gray-700">
-            <DarkModeNew />
-          </div>
-
-          {/* Navigation Section */}
-          <nav className="flex flex-col gap-2 p-4">
-            <NavLink 
-              to="/dashboard" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <MdDashboard className="text-xl" />
-              Dashboard
-            </NavLink>
-            <NavLink 
-              to="/dashboard/faculties" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <FaGraduationCap className="text-xl" />
-              Faculties
-            </NavLink>
-            <NavLink 
-              to="/dashboard/departments" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <MdSchool className="text-xl" />
-              Departments
-            </NavLink>
-            <NavLink 
-              to="/dashboard/teachers" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <FaChalkboardTeacher className="text-xl" />
-              Teachers
-            </NavLink>
-            <NavLink 
-              to="/dashboard/semesters" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <FaBook className="text-xl" />
-              Semesters
-            </NavLink>
-            <NavLink 
-              to="/dashboard/books" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
-              }`}
-            >
-              <MdLibraryBooks className="text-xl" />
-              Books
-            </NavLink>
-          </nav>
-        </div>
-
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-indigo-700 dark:border-gray-700">
-          {/* Profile Settings Button */}
-          <button
-            onClick={() => setProfileModalOpen(true)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors mb-3"
-          >
-            <MdSettings className="text-lg" />
-            Profile Settings
-          </button>
-          
-          {/* Contact Developer Section */}
-          <div className="mt-4 text-center text-indigo-100 text-sm">
-            <p className="mb-2">Need help? Contact developer:</p>
-            <a 
-              href="https://wa.me/93795582109" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              <FaWhatsapp className="text-lg" />
-              WhatsApp Support
-            </a>
-            <p className="mt-2 text-xs opacity-80">Email:nasibburhan4@gmail.com</p>
-          </div>
-          
-          {/* Dark Mode Toggle - Mobile */}
-          <div className="md:hidden mt-4 flex justify-center">
-            <DarkModeNew />
-          </div>
-        </div>
-      </aside>
+    {/* Bottom Section */}
+    <div className="p-4 border-t border-indigo-700/50 dark:border-gray-700/50">
+      {/* Profile Settings Button */}
+      <button
+        onClick={() => setProfileModalOpen(true)}
+        className="w-full flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/60 dark:hover:bg-gray-700/80 transition-colors mb-3"
+      >
+        <MdSettings className="text-lg" />
+        Profile Settings
+      </button>
+      
+      {/* Contact Developer Section */}
+      <div className="mt-4 text-center text-indigo-100 text-sm">
+        <p className="mb-2 opacity-90">Need help? Contact developer:</p>
+        <a 
+          href="https://wa.me/+93795582109" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-green-600/90 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg"
+        >
+          <FaWhatsapp className="text-lg" />
+          WhatsApp Support
+        </a>
+        <p className="mt-2 text-xs opacity-70">Email: nasibburhan4@gmail.com</p>
+      </div>
+    </div>
+    
+    {/* Dark Mode Toggle - Now at very bottom */}
+    <div className="p-4 border-t border-indigo-700/50 dark:border-gray-700/50 flex justify-center">
+      <DarkModeNew />
+    </div>
+  </div>
+</aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
