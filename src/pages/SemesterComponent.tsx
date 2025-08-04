@@ -29,6 +29,7 @@ const SemesterComponent = () => {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isFormExpanded, setIsFormExpanded] = useState(false);
 
   const [formData, setFormData] = useState<Omit<Semester, 'id' | 'books'> & { books: string }>({
     name: "",
@@ -101,6 +102,7 @@ const SemesterComponent = () => {
       startDate: "",
       endDate: ""
     });
+    setIsFormExpanded(false);
   };
 
   const handleEdit = (semester: Semester) => {
@@ -115,8 +117,8 @@ const SemesterComponent = () => {
       departmentId: semester.departmentId,
       startDate: semester.startDate || "",
       endDate: semester.endDate || ""
-      
     });
+    setIsFormExpanded(true);
     document.getElementById("semesters-form")?.scrollIntoView({behavior:"smooth"});
   };
 
@@ -134,31 +136,59 @@ const SemesterComponent = () => {
   const filteredTeachers = teachers.filter((t) => t.departmentId === formData.departmentId);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen dark:bg-gray-800">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen dark:bg-gray-800">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <FaCalendarAlt className="text-3xl text-blue-600" />
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-300">Semester Management</h2>
+        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+          <FaCalendarAlt className="text-2xl md:text-3xl text-blue-600" />
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-300">Semester Management</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Section */}
-          <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6 dark:bg-gray-800">
-            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              {editId ? (
-                <>
-                  <FaEdit className="text-blue-500" />
-                  <span>Edit Semester</span>
-                </>
-              ) : (
-                <>
-                  <FaBook className="text-green-500" />
-                  <span className="dark:text-gray-300">Add New Semester</span>
-                </>
-              )}
-            </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          {/* Form Section - Collapsible on mobile */}
+          <div className="lg:col-span-1 bg-white rounded-lg shadow-md dark:bg-gray-800">
+            <div 
+              className={`p-4 md:p-6 cursor-pointer lg:cursor-auto ${isFormExpanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}
+              onClick={() => setIsFormExpanded(!isFormExpanded)}
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 dark:text-gray-300">
+                  {editId ? (
+                    <>
+                      <FaEdit className="text-blue-500" />
+                      <span>Edit Semester</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaBook className="text-green-500" />
+                      <span>Add Semester</span>
+                    </>
+                  )}
+                </h3>
+                <button 
+                  className="lg:hidden text-blue-600 dark:text-blue-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFormExpanded(!isFormExpanded);
+                  }}
+                >
+                  {isFormExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
 
-            <form onSubmit={handleSubmit} id="semesters-form" className="space-y-4">
+            <form 
+              onSubmit={handleSubmit} 
+              id="semesters-form" 
+              className={`${isFormExpanded ? 'block' : 'hidden'} lg:block p-4 md:p-6 space-y-4`}
+            >
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
@@ -169,7 +199,7 @@ const SemesterComponent = () => {
                     name="facultyId"
                     value={formData.facultyId}
                     onChange={handleInputChange}
-                    className="dark:bg-gray-800 dark:text-gray-300 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="dark:bg-gray-800 dark:text-gray-300 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                   >
                     <option value="">Select Faculty</option>
                     {faculties.map((f) => (
@@ -190,7 +220,7 @@ const SemesterComponent = () => {
                     value={formData.departmentId}
                     onChange={handleInputChange}
                     disabled={!formData.facultyId}
-                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-sm md:text-base"
                   >
                     <option value="">Select Department</option>
                     {filteredDepartments.map((d) => (
@@ -203,14 +233,14 @@ const SemesterComponent = () => {
               </div>
 
               <div>
-                <label className=" dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Semester Name</label>
+                <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Semester Name</label>
                 <input 
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="e.g., First Semester"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                 />
               </div>
 
@@ -223,7 +253,7 @@ const SemesterComponent = () => {
                     value={formData.year}
                     onChange={handleInputChange}
                     placeholder="e.g., 2023-2024"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                   />
                 </div>
                 <div>
@@ -232,7 +262,7 @@ const SemesterComponent = () => {
                     name="semester"
                     value={formData.semester}
                     onChange={handleInputChange}
-                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                   >
                     <option value="">Select</option>
                     <option value="Fall">Fall</option>
@@ -251,7 +281,7 @@ const SemesterComponent = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                   />
                 </div>
                 <div>
@@ -261,7 +291,7 @@ const SemesterComponent = () => {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                   />
                 </div>
               </div>
@@ -274,7 +304,7 @@ const SemesterComponent = () => {
                   value={formData.books}
                   onChange={handleInputChange}
                   placeholder="e.g., Introduction to CS, Calculus I"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                 />
               </div>
 
@@ -286,106 +316,124 @@ const SemesterComponent = () => {
                   onChange={handleInputChange}
                   placeholder="Semester objectives, notes..."
                   rows={3}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={!formData.departmentId}
-                className={`w-full py-2 px-4 rounded-md text-white font-medium ${editId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} disabled:opacity-50`}
-              >
-                {editId ? 'Update Semester' : 'Add Semester'}
-              </button>
-
-              {editId && (
+              <div className="grid grid-cols-1 gap-2">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setEditId(null);
-                    setFormData({
-                      name: "",
-                      year: "",
-                      semester: "",
-                      books: "",
-                      description: "",
-                      facultyId: "",
-                      departmentId: "",
-                      startDate: "",
-                      endDate: ""
-                    });
-                  }}
-                  className="w-full py-2 px-4 rounded-md bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
+                  type="submit"
+                  disabled={!formData.departmentId}
+                  className={`w-full py-2 px-4 rounded-md text-white font-medium text-sm md:text-base ${
+                    editId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'
+                  } disabled:opacity-50`}
                 >
-                  Cancel
+                  {editId ? 'Update Semester' : 'Add Semester'}
                 </button>
-              )}
+
+                {editId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditId(null);
+                      setFormData({
+                        name: "",
+                        year: "",
+                        semester: "",
+                        books: "",
+                        description: "",
+                        facultyId: "",
+                        departmentId: "",
+                        startDate: "",
+                        endDate: ""
+                      });
+                      setIsFormExpanded(false);
+                    }}
+                    className="w-full py-2 px-4 rounded-md bg-gray-200 text-gray-800 font-medium hover:bg-gray-300 text-sm md:text-base"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
 
           {/* List Section */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             {/* Semesters List */}
-            <div className="bg-white rounded-lg shadow-md p-6 dark:text-gray-300 dark:bg-gray-800">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-6 dark:text-gray-300 dark:bg-gray-800">
+              <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
                 <FaBook className="text-blue-500" />
                 <span>Semesters</span>
-                <span className="ml-auto text-sm font-normal text-gray-500">
+                <span className="ml-auto text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">
                   {filteredSemesters.length} semester(s)
                 </span>
               </h3>
 
               {filteredSemesters.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FaBook className="mx-auto text-4xl text-gray-300 mb-2" />
+                <div className="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                  <FaBook className="mx-auto text-3xl md:text-4xl text-gray-300 mb-2" />
                   <p>No semesters found for selected department.</p>
-                  <p className="text-sm">Select a faculty and department to view semesters.</p>
+                  <p className="text-xs md:text-sm">Select a faculty and department to view semesters.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {filteredSemesters.map((semester) => (
-                    <div key={semester.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div 
+                      key={semester.id} 
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow"
+                    >
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="text-lg font-bold text-blue-700">
+                        <div className="flex-1">
+                          <h4 className="text-base md:text-lg font-bold text-blue-700 dark:text-blue-500">
                             {semester.name} ({semester.year})
                           </h4>
-                          <p className="text-sm text-gray-600 mb-1">
+                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1">
                             {semester.semester} Semester
                             {semester.startDate && semester.endDate && (
-                              <span className="ml-2 text-gray-500">
+                              <span className="ml-1 md:ml-2 text-gray-500 dark:text-gray-400">
                                 ({new Date(semester.startDate).toLocaleDateString()} - {new Date(semester.endDate).toLocaleDateString()})
                               </span>
                             )}
                           </p>
-                          <p className="text-sm text-gray-700 mb-2">{semester.description}</p>
+                          <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                            {semester.description}
+                          </p>
                           {semester.books.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium text-gray-500 mb-1">TEXTBOOKS:</p>
+                            <div className="mt-1 md:mt-2">
+                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">TEXTBOOKS:</p>
                               <div className="flex flex-wrap gap-1">
-                                {semester.books.map((book, index) => (
-                                  <span key={index} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
+                                {semester.books.slice(0, 3).map((book, index) => (
+                                  <span 
+                                    key={index} 
+                                    className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded"
+                                  >
                                     {book}
                                   </span>
                                 ))}
+                                {semester.books.length > 3 && (
+                                  <span className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded">
+                                    +{semester.books.length - 3} more
+                                  </span>
+                                )}
                               </div>
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 md:gap-2 ml-2">
                           <button
                             onClick={() => handleEdit(semester)}
-                            className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20"
                             title="Edit"
                           >
-                            <FaEdit />
+                            <FaEdit className="text-sm md:text-base" />
                           </button>
                           <button
                             onClick={() => handleDelete(semester.id)}
-                            className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
                             title="Delete"
                           >
-                            <FaTrash />
+                            <FaTrash className="text-sm md:text-base" />
                           </button>
                         </div>
                       </div>
@@ -397,35 +445,37 @@ const SemesterComponent = () => {
 
             {/* Teachers List */}
             {formData.departmentId && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-lg shadow-md p-4 md:p-6 dark:bg-gray-800">
+                <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
                   <FaChalkboardTeacher className="text-blue-500" />
                   <span>Department Teachers</span>
-                  <span className="ml-auto text-sm font-normal text-gray-500">
+                  <span className="ml-auto text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">
                     {filteredTeachers.length} teacher(s)
                   </span>
                 </h3>
 
                 {filteredTeachers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <FaChalkboardTeacher className="mx-auto text-4xl text-gray-300 mb-2" />
+                  <div className="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                    <FaChalkboardTeacher className="mx-auto text-3xl md:text-4xl text-gray-300 mb-2" />
                     <p>No teachers assigned to this department.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     {filteredTeachers.map((teacher) => (
                       <Link
                         key={teacher.id}
                         to={`/teacher/${teacher.id}`}
-                        className="border border-gray-200 rounded-lg p-3 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-200 dark:hover:border-blue-500/30 transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center">
-                            <FaChalkboardTeacher />
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center flex-shrink-0">
+                            <FaChalkboardTeacher className="text-sm md:text-base" />
                           </div>
-                          <div>
-                            <h4 className="font-medium text-gray-800">{teacher.fullName}</h4>
-                            <p className="text-sm text-gray-500">View profile →</p>
+                          <div className="overflow-hidden">
+                            <h4 className="font-medium text-gray-800 dark:text-gray-300 text-sm md:text-base truncate">
+                              {teacher.fullName}
+                            </h4>
+                            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">View profile →</p>
                           </div>
                         </div>
                       </Link>

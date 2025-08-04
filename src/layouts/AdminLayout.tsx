@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave } from "react-icons/fa";
+import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
 import DarkModeNew from "../components/DarkModeNew";
 
@@ -111,13 +111,16 @@ const AdminLayout = () => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
       >
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 text-xl font-bold text-white border-b border-indigo-700 dark:border-gray-700 flex items-center gap-2">
             <FaUniversity className="text-2xl text-indigo-300" />
             <span>Application Admin</span>
           </div>
           
-          
+          {/* Dark Mode Toggle - Desktop */}
+          <div className="hidden md:flex items-center justify-center p-2 border-b border-indigo-700 dark:border-gray-700">
+            <DarkModeNew />
+          </div>
           
           <nav className="flex flex-col gap-1 p-4">
             <NavLink 
@@ -182,21 +185,32 @@ const AdminLayout = () => {
           {/* Profile Settings Button */}
           <button
             onClick={() => setProfileModalOpen(true)}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors mb-3"
           >
             <MdSettings className="text-lg" />
             Profile Settings
           </button>
+          
+          {/* Contact Developer Section */}
+          <div className="mt-4 text-center text-indigo-100 text-sm">
+            <p className="mb-2">Need help? Contact developer:</p>
+            <a 
+              href="https://wa.me/93795582109" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
+            >
+              <FaWhatsapp className="text-lg" />
+              WhatsApp Support
+            </a>
+            <p className="mt-2 text-xs opacity-80">Email:nasibburhan4@gmail.com</p>
+          </div>
           
           {/* Dark Mode Toggle - Mobile */}
           <div className="md:hidden mt-4 flex justify-center">
             <DarkModeNew />
           </div>
         </div>
-        {/* Dark Mode Toggle - Desktop */}
-          <div className=" hidden md:flex items-center justify-center p-2 border-b border-indigo-700 dark:border-gray-700">
-            <DarkModeNew />
-          </div>
       </aside>
 
       {/* Main Content */}
@@ -403,7 +417,6 @@ const AdminLayout = () => {
         </div>
       )}
     </div>
-    
   );
 };
 

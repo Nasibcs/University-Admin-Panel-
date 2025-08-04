@@ -367,7 +367,7 @@ const Book = () => {
         {/* Filters Sidebar */}
         <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 h-fit">
           <h3 className="text-lg font-semibold mb-4 dark:text-white">
-            Filters
+            Library Managment
           </h3>
 
           <div className="space-y-4">
