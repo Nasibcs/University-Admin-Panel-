@@ -107,74 +107,76 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-800 to-indigo-900 dark:from-gray-800 dark:to-gray-900 shadow-lg transform ${
+        className={`fixed z-40 top-0 left-0 h-full w-72 bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-900 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 shadow-2xl rounded-r-3xl border-r-2 border-indigo-700 dark:border-gray-800 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
       >
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 text-xl font-bold text-white border-b border-indigo-700 dark:border-gray-700 flex items-center gap-2">
-            <FaUniversity className="text-2xl text-indigo-300" />
-            <span>Application Admin</span>
+          {/* Logo Section */}
+          <div className="flex items-center gap-3 p-6 pb-4 border-b border-indigo-700 dark:border-gray-700">
+            <img src="/favicon/favicon.svg" alt="Logo" className="w-10 h-10 rounded-full shadow-lg border-2 border-indigo-400 dark:border-gray-700 bg-white" />
+            <span className="text-2xl font-bold text-white tracking-wide">Univ Admin</span>
           </div>
-          
+
           {/* Dark Mode Toggle - Desktop */}
-          <div className="hidden md:flex items-center justify-center p-2 border-b border-indigo-700 dark:border-gray-700">
+          <div className="hidden md:flex items-center justify-center p-3 border-b border-indigo-700 dark:border-gray-700">
             <DarkModeNew />
           </div>
-          
-          <nav className="flex flex-col gap-1 p-4">
+
+          {/* Navigation Section */}
+          <nav className="flex flex-col gap-2 p-4">
             <NavLink 
               to="/dashboard" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <MdDashboard className="text-lg" />
+              <MdDashboard className="text-xl" />
               Dashboard
             </NavLink>
             <NavLink 
               to="/dashboard/faculties" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <FaGraduationCap className="text-lg" />
+              <FaGraduationCap className="text-xl" />
               Faculties
             </NavLink>
             <NavLink 
               to="/dashboard/departments" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <MdSchool className="text-lg" />
+              <MdSchool className="text-xl" />
               Departments
             </NavLink>
             <NavLink 
               to="/dashboard/teachers" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <FaChalkboardTeacher className="text-lg" />
+              <FaChalkboardTeacher className="text-xl" />
               Teachers
             </NavLink>
             <NavLink 
               to="/dashboard/semesters" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <FaBook className="text-lg" />
+              <FaBook className="text-xl" />
               Semesters
             </NavLink>
             <NavLink 
               to="/dashboard/books" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
-                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-xl text-indigo-100 hover:bg-indigo-600 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-semibold shadow-md" : ""
               }`}
             >
-              <MdLibraryBooks className="text-lg" />
+              <MdLibraryBooks className="text-xl" />
               Books
             </NavLink>
           </nav>
