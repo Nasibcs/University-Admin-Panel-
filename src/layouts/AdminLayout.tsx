@@ -201,10 +201,7 @@ const AdminLayout = () => {
       </div>
     </div>
     
-    {/* Dark Mode Toggle - Now at very bottom */}
-    <div className="p-4 border-t border-indigo-700/50 dark:border-gray-700/50 flex justify-center">
-      <DarkModeNew />
-    </div>
+   
   </div>
 </aside>
 
@@ -222,12 +219,14 @@ const AdminLayout = () => {
             <FaUniversity className="text-indigo-600 dark:text-indigo-400" />
             Admin
           </h2>
+     
           <button 
             onClick={handleLogout} 
             className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm shadow"
           >
             Logout
           </button>
+     
         </header>
          
         {/* Desktop Header */}
@@ -267,6 +266,10 @@ const AdminLayout = () => {
             >
               <span>Logout</span>
             </button>
+                       {/* Dark Mode Toggle - Now at very bottom */}
+    <div className="p-4 border-t border-indigo-700/50 dark:border-gray-700/50 flex justify-center">
+      <DarkModeNew />
+    </div>
           </div>
         </header>
          
