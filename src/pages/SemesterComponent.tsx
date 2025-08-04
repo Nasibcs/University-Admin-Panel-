@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { Link } from "react-router-dom";
 import { FaBook, FaCalendarAlt, FaChalkboardTeacher, FaEdit, FaTrash, FaUniversity, FaGraduationCap } from "react-icons/fa";
+import DarkModeNew from "../components/DarkModeNew";
 
 type Semester = {
   id: string;
@@ -134,16 +135,16 @@ const SemesterComponent = () => {
   const filteredTeachers = teachers.filter((t) => t.departmentId === formData.departmentId);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen dark:bg-gray-800">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <FaCalendarAlt className="text-3xl text-blue-600" />
-          <h2 className="text-3xl font-bold text-gray-800">Semester Management</h2>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-300">Semester Management</h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Form Section */}
-          <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
+          <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6 dark:bg-gray-800">
             <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
               {editId ? (
                 <>
@@ -153,7 +154,7 @@ const SemesterComponent = () => {
               ) : (
                 <>
                   <FaBook className="text-green-500" />
-                  <span>Add New Semester</span>
+                  <span className="dark:text-gray-300">Add New Semester</span>
                 </>
               )}
             </h3>
@@ -161,7 +162,7 @@ const SemesterComponent = () => {
             <form onSubmit={handleSubmit} id="semesters-form" className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                     <FaUniversity className="text-blue-500" />
                     Faculty
                   </label>
@@ -169,7 +170,7 @@ const SemesterComponent = () => {
                     name="facultyId"
                     value={formData.facultyId}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="dark:bg-gray-800 dark:text-gray-300 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Faculty</option>
                     {faculties.map((f) => (
@@ -181,7 +182,7 @@ const SemesterComponent = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                     <FaGraduationCap className="text-blue-500" />
                     Department
                   </label>
@@ -190,7 +191,7 @@ const SemesterComponent = () => {
                     value={formData.departmentId}
                     onChange={handleInputChange}
                     disabled={!formData.facultyId}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                   >
                     <option value="">Select Department</option>
                     {filteredDepartments.map((d) => (
@@ -203,8 +204,8 @@ const SemesterComponent = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Semester Name</label>
-                <input
+                <label className=" dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Semester Name</label>
+                <input 
                   type="text"
                   name="name"
                   value={formData.name}
@@ -216,7 +217,7 @@ const SemesterComponent = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
                   <input
                     type="text"
                     name="year"
@@ -227,12 +228,12 @@ const SemesterComponent = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Semester Type</label>
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Semester Type</label>
                   <select
                     name="semester"
                     value={formData.semester}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="dark:text-gray-300 dark:bg-gray-800 w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select</option>
                     <option value="Fall">Fall</option>
@@ -245,7 +246,7 @@ const SemesterComponent = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                   <input
                     type="date"
                     name="startDate"
@@ -255,7 +256,7 @@ const SemesterComponent = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">End Date</label>
                   <input
                     type="date"
                     name="endDate"
@@ -267,7 +268,7 @@ const SemesterComponent = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Textbooks (comma separated)</label>
+                <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Textbooks (comma separated)</label>
                 <input
                   type="text"
                   name="books"
@@ -279,7 +280,7 @@ const SemesterComponent = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="dark:text-gray-300 block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -326,7 +327,7 @@ const SemesterComponent = () => {
           {/* List Section */}
           <div className="lg:col-span-2 space-y-6">
             {/* Semesters List */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 dark:text-gray-300 dark:bg-gray-800">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <FaBook className="text-blue-500" />
                 <span>Semesters</span>
@@ -437,6 +438,7 @@ const SemesterComponent = () => {
           </div>
         </div>
       </div>
+      <DarkModeNew/>
     </div>
   );
 };

@@ -2,15 +2,13 @@ import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
-// import WhatsAppButton from "../components/WhatsappButton/WhatsappButton";
+import DarkModeNew from "../components/DarkModeNew";
 
 interface AdminProfile {
   username: string;
   email: string;
   profilePicture: string;
 }
-
-import DarkModeNew from "../components/DarkModeNew";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -109,20 +107,26 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-slate-700 to-slate-800 dark:bg-gray-800 shadow-lg transform ${
+        className={`fixed z-40 top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-800 to-indigo-900 dark:from-gray-800 dark:to-gray-900 shadow-lg transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } transition-transform duration-300 ease-in-out md:translate-x-0 md:static flex flex-col`}
       >
         <div className="flex-1">
-          <div className="dark:bg-slate-800 p-4 text-xl font-bold text-white border-b border-slate-700 flex items-center gap-2">
-            <FaUniversity className="text-2xl" />
+          <div className="p-4 text-xl font-bold text-white border-b border-indigo-700 dark:border-gray-700 flex items-center gap-2">
+            <FaUniversity className="text-2xl text-indigo-300" />
             <span>Application Admin</span>
           </div>
+          
+          {/* Dark Mode Toggle - Desktop */}
+          <div className="hidden md:flex items-center justify-center p-4 border-b border-indigo-700 dark:border-gray-700">
+            <DarkModeNew />
+          </div>
+          
           <nav className="flex flex-col gap-1 p-4">
             <NavLink 
               to="/dashboard" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <MdDashboard className="text-lg" />
@@ -130,8 +134,8 @@ const AdminLayout = () => {
             </NavLink>
             <NavLink 
               to="/dashboard/faculties" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <FaGraduationCap className="text-lg" />
@@ -139,8 +143,8 @@ const AdminLayout = () => {
             </NavLink>
             <NavLink 
               to="/dashboard/departments" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <MdSchool className="text-lg" />
@@ -148,8 +152,8 @@ const AdminLayout = () => {
             </NavLink>
             <NavLink 
               to="/dashboard/teachers" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <FaChalkboardTeacher className="text-lg" />
@@ -157,8 +161,8 @@ const AdminLayout = () => {
             </NavLink>
             <NavLink 
               to="/dashboard/semesters" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <FaBook className="text-lg" />
@@ -166,44 +170,46 @@ const AdminLayout = () => {
             </NavLink>
             <NavLink 
               to="/dashboard/books" 
-              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors ${
-                isActive ? "dark:bg-slate-700 bg-slate-700 font-medium" : ""
+              className={({ isActive }) => `flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors ${
+                isActive ? "bg-indigo-700 dark:bg-gray-700 font-medium" : ""
               }`}
             >
               <MdLibraryBooks className="text-lg" />
               Books
             </NavLink>
-            <button
-              onClick={() => setProfileModalOpen(true)}
-              className="flex items-center gap-3 p-3 rounded-lg text-white hover:bg-slate-700 transition-colors mt-4"
-            >
-              <MdSettings className="text-lg" />
-              Profile Settings
-            </button>
           </nav>
         </div>
 
-        {/* Mobile/Tablet Footer with Contact and Dark Mode */}
-        <div className="mt-auto md:hidden">
-          <div className="p-4 border-t border-slate-700 dark:border-gray-700 flex flex-col gap-4 items-center">
+        {/* Bottom Section */}
+        <div className="p-4 border-t border-indigo-700 dark:border-gray-700">
+          {/* Profile Settings Button */}
+          <button
+            onClick={() => setProfileModalOpen(true)}
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-indigo-100 hover:bg-indigo-700 dark:hover:bg-gray-700 transition-colors"
+          >
+            <MdSettings className="text-lg" />
+            Profile Settings
+          </button>
+          
+          {/* Dark Mode Toggle - Mobile */}
+          <div className="md:hidden mt-4 flex justify-center">
             <DarkModeNew />
           </div>
         </div>
-
       </aside>
 
       {/* Main Content */}
-      <div className="dark:bg-gray-900 flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */} 
         <header className="flex justify-between items-center p-4 shadow-md bg-white dark:bg-gray-800 border-b dark:border-gray-700 md:hidden">
           <button 
             onClick={toggleSidebar} 
-            className="text-blue-700 dark:text-blue-400 text-2xl hover:bg-blue-50 dark:hover:bg-gray-700 p-2 rounded-full"
+            className="text-indigo-600 dark:text-indigo-400 text-2xl hover:bg-indigo-50 dark:hover:bg-gray-700 p-2 rounded-full"
           >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
           <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <FaUniversity className="text-blue-600 dark:text-blue-400" />
+            <FaUniversity className="text-indigo-600 dark:text-indigo-400" />
             Admin
           </h2>
           <button 
@@ -217,13 +223,13 @@ const AdminLayout = () => {
         {/* Desktop Header */}
         <header className="hidden md:flex justify-between items-center px-6 py-4 shadow-md bg-white dark:bg-gray-800 border-b dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <FaUniversity className="text-blue-600 dark:text-blue-400" />
+            <FaUniversity className="text-indigo-600 dark:text-indigo-400" />
             <span>Administration Panel</span>
           </h2>
           <div className="flex items-center gap-6">
             {/* Profile */}
             <div 
-              className="flex items-center gap-3 border-l border-gray-200 dark:border-gray-700 pl-4 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 p-2 rounded-lg"
+              className="flex items-center gap-3 border-l border-gray-200 dark:border-gray-700 pl-4 cursor-pointer hover:bg-indigo-50 dark:hover:bg-gray-700 p-2 rounded-lg"
               onClick={() => setProfileModalOpen(true)}
             >
               <div className="relative">
@@ -234,7 +240,7 @@ const AdminLayout = () => {
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <FaUserCircle className="text-blue-600 dark:text-blue-400 text-3xl" />
+                  <FaUserCircle className="text-indigo-600 dark:text-indigo-400 text-3xl" />
                 )}
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white dark:border-gray-800"></span>
               </div>
@@ -288,12 +294,12 @@ const AdminLayout = () => {
                       <img 
                         src={tempProfile.profilePicture} 
                         alt="Profile Preview" 
-                        className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 dark:border-gray-700"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-indigo-100 dark:border-gray-700"
                       />
                     ) : (
-                      <FaUserCircle className="text-blue-500 dark:text-blue-400 text-8xl" />
+                      <FaUserCircle className="text-indigo-500 dark:text-indigo-400 text-8xl" />
                     )}
-                    <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700">
+                    <label className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700">
                       <FaCamera />
                       <input 
                         key={fileInputKey}
@@ -314,7 +320,7 @@ const AdminLayout = () => {
                     type="text"
                     value={tempProfile.username}
                     onChange={(e) => setTempProfile({...tempProfile, username: e.target.value})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
@@ -325,7 +331,7 @@ const AdminLayout = () => {
                     type="email"
                     value={tempProfile.email}
                     onChange={(e) => setTempProfile({...tempProfile, email: e.target.value})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
@@ -339,7 +345,7 @@ const AdminLayout = () => {
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                       placeholder="Enter current password"
                     />
                   </div>
@@ -350,7 +356,7 @@ const AdminLayout = () => {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                       placeholder="Enter new password"
                     />
                   </div>
@@ -361,7 +367,7 @@ const AdminLayout = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                       placeholder="Confirm new password"
                     />
                   </div>
@@ -384,7 +390,7 @@ const AdminLayout = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-2"
                   >
                     <FaSave />
                     Save Changes
