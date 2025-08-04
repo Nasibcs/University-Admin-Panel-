@@ -3,7 +3,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import LoginPage from "../pages/LoginPage";
 import FacultyPage from "../pages/FacultyPage";
 import DepartmentComponent from "../pages/DepartmentComponent";
-// import TeachersComponent from "../pages/TeachersComponent";
+import TeachersComponent from "../pages/TeachersComponent";
 import SemesterComponent from "../pages/SemesterComponent";
 import Book from "../features/Book/Book";
 import DashboardComponent from "../pages/DashboardPage";
@@ -28,7 +28,7 @@ const AppRouter = () => {
               path="departments/:departmentId"
               element={<DepartmentComponent />}
             />
-            {/* <Route path="teachers" element={<TeachersComponent />} /> */}
+            <Route path="teachers" element={<TeachersComponent />} />
             {/* نورې داخلي صفحې وروسته دلته ورزیاتېږي */}
           </Route>
         </Routes>

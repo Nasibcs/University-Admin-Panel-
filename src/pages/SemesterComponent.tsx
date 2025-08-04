@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { Link } from "react-router-dom";
 import { FaBook, FaCalendarAlt, FaChalkboardTeacher, FaEdit, FaTrash, FaUniversity, FaGraduationCap } from "react-icons/fa";
-import DarkModeNew from "../components/DarkModeNew";
 
 type Semester = {
   id: string;
@@ -438,7 +437,6 @@ const SemesterComponent = () => {
           </div>
         </div>
       </div>
-      <DarkModeNew/>
     </div>
   );
 };

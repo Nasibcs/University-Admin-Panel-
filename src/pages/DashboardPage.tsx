@@ -8,7 +8,6 @@ import {
   FiUsers,
   FiBookOpen,
 } from "react-icons/fi";
-import DarkModeNew from "../components/DarkModeNew";
 // import DarkModeNew from "../components/DarkModeNew";
 
 type EntityCounts = {
@@ -273,7 +272,6 @@ const Dashboard = () => {
           </div>
         </motion.div>
       </main>
-    <DarkModeNew/>
       {/* Remove DarkModeNew and WhatsAppButton from DashboardPage. These should be in the sidebar for mobile/tablet screens only. */}
     </div>
   );

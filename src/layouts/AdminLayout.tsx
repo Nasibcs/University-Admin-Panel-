@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave, FaWhatsapp } from "react-icons/fa";
+import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTeacher, FaUniversity, FaCamera, FaSave } from "react-icons/fa";
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
 import DarkModeNew from "../components/DarkModeNew";
 
@@ -117,10 +117,7 @@ const AdminLayout = () => {
             <span>Application Admin</span>
           </div>
           
-          {/* Dark Mode Toggle - Desktop */}
-          <div className="hidden md:flex items-center justify-center p-4 border-b border-indigo-700 dark:border-gray-700">
-            <DarkModeNew />
-          </div>
+          
           
           <nav className="flex flex-col gap-1 p-4">
             <NavLink 
@@ -196,6 +193,10 @@ const AdminLayout = () => {
             <DarkModeNew />
           </div>
         </div>
+        {/* Dark Mode Toggle - Desktop */}
+          <div className=" hidden md:flex items-center justify-center p-2 border-b border-indigo-700 dark:border-gray-700">
+            <DarkModeNew />
+          </div>
       </aside>
 
       {/* Main Content */}
@@ -219,7 +220,7 @@ const AdminLayout = () => {
             Logout
           </button>
         </header>
-
+         
         {/* Desktop Header */}
         <header className="hidden md:flex justify-between items-center px-6 py-4 shadow-md bg-white dark:bg-gray-800 border-b dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
@@ -402,6 +403,7 @@ const AdminLayout = () => {
         </div>
       )}
     </div>
+    
   );
 };
 

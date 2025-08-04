@@ -32,7 +32,7 @@ export default function DarkModeNew() {
         <motion.button
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-            className="relative bg-gradient-to-br from-gray-700 to-gray-900 dark:from-yellow-300 dark:to-yellow-500 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 w-12 h-12 flex items-center justify-center overflow-hidden"
+            className="relative bg-gradient-to-br from-gray-700 to-gray-900 dark:from-yellow-300 dark:to-yellow-500 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 w-8 h-8 flex items-center justify-center overflow-hidden"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
         >

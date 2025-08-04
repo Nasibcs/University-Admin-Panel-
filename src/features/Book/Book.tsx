@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { FaBook, FaPen, FaTrash, FaUniversity, FaGraduationCap, FaCalendarAlt, FaTimes } from "react-icons/fa";
-import DarkModeNew from "../../components/DarkModeNew";
 
 // ========== TYPES ==========
 interface Book {
@@ -467,7 +466,6 @@ const Book = () => {
           )}
         </div>
       </div>
-      <DarkModeNew/>  
     </div>
   );
 };
