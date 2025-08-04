@@ -200,7 +200,10 @@ const AdminLayout = () => {
         <p className="mt-2 text-xs opacity-70">Email: nasibburhan4@gmail.com</p>
       </div>
     </div>
-    
+                        {/* Dark Mode Toggle - Now at very bottom */}
+    <div className="p-4 border-t border-indigo-700/50 dark:border-gray-700/50 flex justify-center">
+      <DarkModeNew />
+    </div>
    
   </div>
 </aside>
