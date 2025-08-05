@@ -448,7 +448,7 @@ const SemesterComponent = () => {
               <div className="bg-white rounded-lg shadow-md p-4 md:p-6 dark:bg-gray-800">
                 <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center gap-2">
                   <FaChalkboardTeacher className="text-blue-500" />
-                  <span>Department Teachers</span>
+                  <span className="dark:text-gray-300">Department Teachers</span>
                   <span className="ml-auto text-xs md:text-sm font-normal text-gray-500 dark:text-gray-400">
                     {filteredTeachers.length} teacher(s)
                   </span>
