@@ -8,10 +8,14 @@ import SemesterComponent from "../pages/SemesterComponent";
 import Book from "../features/Book/Book";
 import DashboardComponent from "../pages/DashboardPage";
 
+/** Must match Vite `base` (no trailing slash). See https://reactrouter.com/en/main/router-components/browser-router#basename */
+const routerBasename =
+  import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
+
 const AppRouter = () => {
   return (
     <div className="dark:bg-gray-900 min-h-screen">
-      <BrowserRouter basename="/">
+      <BrowserRouter basename={routerBasename}>
         <Routes>
           <Route path="/" element={<LoginPage />} />
 

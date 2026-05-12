@@ -1,0 +1,8 @@
+{
+  "name": "University Admin Panel",
+  "short_name": "Admin",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "."
+}
