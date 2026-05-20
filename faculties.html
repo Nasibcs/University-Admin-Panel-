@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Directory</title>
+
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: rgba(255, 255, 255, 0.88);
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --border: rgba(148, 163, 184, 0.25);
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.22), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.18), transparent 30rem),
+        var(--bg);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: auto;
+      padding: 48px 0;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      background: #dbeafe;
+      font-weight: 700;
+      font-size: 0.82rem;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .subtitle {
+      max-width: 650px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 190px;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.15);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--card);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      transition: 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16);
+      border-color: rgba(37, 99, 235, 0.35);
+    }
+
+    .logo-area {
+      height: 170px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08)),
+        #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo,
+    .logo-fallback {
+      width: 92px;
+      height: 92px;
+      border-radius: 22px;
+      background: white;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    .logo {
+      object-fit: contain;
+      padding: 12px;
+    }
+
+    .logo-fallback {
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .faculty-title {
+      margin: 0 0 18px;
+      font-size: 1.3rem;
+      line-height: 1.3;
+    }
+
+    .info {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 11px 13px;
+      border-radius: 14px;
+      background: rgba(241, 245, 249, 0.9);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .info-row strong {
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .info-row span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+
+    .description {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.96rem;
+    }
+
+    .message {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 32px;
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      box-shadow: var(--shadow);
+    }
+
+    .message strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+
+    .message.error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: rgba(185, 28, 28, 0.25);
+    }
+
+    .loader {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .skeleton {
+      height: 360px;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent),
+        linear-gradient(180deg, #e2e8f0, #f8fafc);
+      background-size: 240px 100%, 100% 100%;
+      animation: shimmer 1.2s linear infinite;
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes shimmer {
+      from {
+        background-position: -240px 0, 0 0;
+      }
+      to {
+        background-position: calc(100% + 240px) 0, 0 0;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .grid,
+      .loader {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(100% - 22px, 1180px);
+        padding: 32px 0;
+      }
+
+      .grid,
+      .loader {
+        grid-template-columns: 1fr;
+      }
+
+      .status {
+        width: 100%;
+      }
+
+      .logo-area {
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header class="hero">
+      <div>
+        <span class="badge">University Faculties</span>
+        <h1>Faculty Directory</h1>
+       
+      </div>
+
+      <div class="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="statusText">Loading...</span>
+      </div>
+    </header>
+
+    <section id="app" aria-live="polite">
+      <div class="loader">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const API_BASE_URL = "http://localhost:8081";
+    const API_URL = `${API_BASE_URL}/api/faculties`;
+
+    const app = document.getElementById("app");
+    const statusText = document.getElementById("statusText");
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getLogoUrl(logo) {
+      if (!logo) return "";
+
+      const safeLogo = String(logo).trim();
+
+      if (
+        safeLogo.startsWith("http://") ||
+        safeLogo.startsWith("https://") ||
+        safeLogo.startsWith("data:")
+      ) {
+        return safeLogo;
+      }
+
+      return `${API_BASE_URL}${safeLogo.startsWith("/") ? "" : "/"}${safeLogo}`;
+    }
+
+    function getInitials(name) {
+      return String(name || "Faculty")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join("") || "F";
+    }
+
+    function createLogoFallback(text) {
+      const fallback = document.createElement("div");
+      fallback.className = "logo-fallback";
+      fallback.setAttribute("aria-hidden", "true");
+      fallback.textContent = text;
+      return fallback;
+    }
+
+    function renderMessage(title, description, isError = false) {
+      app.innerHTML = `
+        <div class="message ${isError ? "error" : ""}">
+          <div>
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(description)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFaculties(faculties) {
+      const html = faculties.map((faculty) => {
+        const name = faculty.name || "Unnamed Faculty";
+        const logoUrl = getLogoUrl(faculty.logo);
+        const initials = getInitials(name);
+
+        const logo = logoUrl
+          ? `
+            <img
+              class="logo"
+              src="${escapeHtml(logoUrl)}"
+              alt="${escapeHtml(name)} logo"
+              onerror="this.replaceWith(createLogoFallback('${escapeHtml(initials)}'))"
+            />
+          `
+          : `<div class="logo-fallback" aria-hidden="true">${escapeHtml(initials)}</div>`;
+
+        return `
+          <article class="card">
+            <div class="logo-area">
+              ${logo}
+            </div>
+
+            <div class="card-body">
+              <h2 class="faculty-title">${escapeHtml(name)}</h2>
+
+              <div class="info">
+          
+
+                <div class="info-row">
+                  <strong>Name</strong>
+                  <span>${escapeHtml(name)}</span>
+                </div>
+
+                <div class="info-row">
+                  <strong>Dean</strong>
+                  <span>${escapeHtml(faculty.dean || "Not available")}</span>
+                </div>
+
+                <div class="info-row">
+                  <strong>Established</strong>
+                  <span>${escapeHtml(faculty.establishedYear || "Not available")}</span>
+                </div>
+
+             
+              </div>
+
+              <p class="description">
+                ${escapeHtml(faculty.description || "No description provided.")}
+              </p>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      app.innerHTML = `<div class="grid">${html}</div>`;
+
+      statusText.textContent =
+        `${faculties.length} ${faculties.length === 1 ? "faculty" : "faculties"} loaded`;
+    }
+
+    async function loadFaculties() {
+      try {
+        statusText.textContent = "Loading...";
+
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const faculties = await response.json();
+
+        if (!Array.isArray(faculties)) {
+          throw new Error("Invalid API response. Expected an array.");
+        }
+
+        if (faculties.length === 0) {
+          statusText.textContent = "No data";
+          renderMessage(
+            "No faculties found",
+            "Please add faculties from the backend system first."
+          );
+          return;
+        }
+
+        renderFaculties(faculties);
+      } catch (error) {
+        console.error("Unable to load faculties:", error);
+
+        statusText.textContent = "Failed";
+
+        renderMessage(
+          "Unable to load faculties",
+          "Make sure the Spring Boot backend is running on http://localhost:8081 and CORS is enabled.",
+          true
+        );
+      }
+    }
+
+    loadFaculties();
+  </script>
+</body>
+</html>

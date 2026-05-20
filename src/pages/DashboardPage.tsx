@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
+  FiArrowRight,
   FiBook,
+  FiBookOpen,
   FiCalendar,
   FiHome,
+  FiPlus,
   FiUsers,
-  FiBookOpen,
 } from "react-icons/fi";
+import { MdSchool } from "react-icons/md";
 
 type EntityCounts = {
   faculties: number;
@@ -17,28 +20,34 @@ type EntityCounts = {
   books: number;
 };
 
+type StatItem = {
+  id: keyof EntityCounts;
+  title: string;
+  label: string;
+  icon: ReactNode;
+  link: string;
+  surface: string;
+  iconBox: string;
+  text: string;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
+
+const readLocalListLength = (key: string) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item && Array.isArray(JSON.parse(item)) ? (JSON.parse(item) as unknown[]).length : 0;
+  } catch {
+    return 0;
+  }
+};
+
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
-  hover: {
-    y: -5,
-    scale: 1.02,
-    transition: { duration: 0.2, ease: "easeOut" },
-  },
-};
-
-const statsContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
-    },
+    transition: { duration: 0.38, ease: "easeOut" },
   },
 };
 
@@ -52,31 +61,40 @@ const Dashboard = () => {
   });
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
 
-  const fetchCounts = () => {
-    const faculties = JSON.parse(localStorage.getItem("faculties") || "[]");
-    const departments = JSON.parse(localStorage.getItem("departments") || "[]");
-    const teachers = JSON.parse(localStorage.getItem("teachers") || "[]");
-    const semesters = JSON.parse(localStorage.getItem("semesters") || "[]");
-    const books = JSON.parse(localStorage.getItem("books") || "[]");
+  const fetchCounts = async () => {
+    setLoading(true);
 
-    setCounts({
-      faculties: faculties.length,
-      departments: departments.length,
-      teachers: teachers.length,
-      semesters: semesters.length,
-      books: books.length,
-    });
+    const fetchListLength = async (key: string, path: string) => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${path}`);
+        if (!response.ok) {
+          throw new Error("Failed to load count");
+        }
+        const data = await response.json();
+        return Array.isArray(data) ? data.length : readLocalListLength(key);
+      } catch {
+        return readLocalListLength(key);
+      }
+    };
 
+    const [faculties, departments, teachers, semesters, books] = await Promise.all([
+      fetchListLength("faculties", "/api/faculties"),
+      fetchListLength("departments", "/api/departments"),
+      fetchListLength("teachers", "/api/teachers"),
+      fetchListLength("semesters", "/api/semesters"),
+      fetchListLength("books", "/api/books"),
+    ]);
+
+    setCounts({ faculties, departments, teachers, semesters, books });
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchCounts();
+    void fetchCounts();
 
     const handleStorageChange = () => {
-      fetchCounts();
+      void fetchCounts();
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -88,206 +106,272 @@ const Dashboard = () => {
     };
   }, []);
 
-  const stats = [
+  const totalRecords = useMemo(
+    () => Object.values(counts).reduce((sum, value) => sum + value, 0),
+    [counts]
+  );
+
+  const stats: StatItem[] = [
     {
       id: "faculties",
       title: "Faculties",
-      icon: <FiHome className="text-xl" />,
-      color:
-        "bg-blue-50 dark:bg-blue-800 text-blue-600 dark:text-blue-200 border-blue-100 dark:border-blue-700",
-      hover: "hover:bg-blue-100 dark:hover:bg-blue-700",
+      label: "Academic faculties",
+      icon: <FiHome />,
       link: "/dashboard/faculties",
+      surface:
+        "border-teal-100 bg-teal-50/80 hover:border-teal-200 dark:border-teal-900/40 dark:bg-teal-950/20",
+      iconBox:
+        "bg-white text-teal-700 ring-teal-100 dark:bg-slate-900 dark:text-teal-300 dark:ring-teal-900/50",
+      text: "text-teal-700 dark:text-teal-300",
     },
     {
       id: "departments",
       title: "Departments",
-      icon: <FiUsers className="text-xl" />,
-      color:
-        "bg-purple-50 dark:bg-purple-800 text-purple-600 dark:text-purple-200 border-purple-100 dark:border-purple-700",
-      hover: "hover:bg-purple-100 dark:hover:bg-purple-700",
+      label: "Faculty departments",
+      icon: <MdSchool />,
       link: "/dashboard/departments",
+      surface:
+        "border-amber-100 bg-amber-50/80 hover:border-amber-200 dark:border-amber-900/40 dark:bg-amber-950/20",
+      iconBox:
+        "bg-white text-amber-700 ring-amber-100 dark:bg-slate-900 dark:text-amber-300 dark:ring-amber-900/50",
+      text: "text-amber-700 dark:text-amber-300",
     },
     {
       id: "teachers",
       title: "Teachers",
-      icon: <FiUsers className="text-xl" />,
-      color:
-        "bg-green-50 dark:bg-green-800 text-green-600 dark:text-green-200 border-green-100 dark:border-green-700",
-      hover: "hover:bg-green-100 dark:hover:bg-green-700",
+      label: "Registered teachers",
+      icon: <FiUsers />,
       link: "/dashboard/teachers",
+      surface:
+        "border-emerald-100 bg-emerald-50/80 hover:border-emerald-200 dark:border-emerald-900/40 dark:bg-emerald-950/20",
+      iconBox:
+        "bg-white text-emerald-700 ring-emerald-100 dark:bg-slate-900 dark:text-emerald-300 dark:ring-emerald-900/50",
+      text: "text-emerald-700 dark:text-emerald-300",
     },
     {
       id: "semesters",
       title: "Semesters",
-      icon: <FiCalendar className="text-xl" />,
-      color:
-        "bg-amber-50 dark:bg-amber-700 text-amber-600 dark:text-amber-200 border-amber-100 dark:border-amber-600",
-      hover: "hover:bg-amber-100 dark:hover:bg-amber-600",
+      label: "Study semesters",
+      icon: <FiCalendar />,
       link: "/dashboard/semesters",
+      surface:
+        "border-sky-100 bg-sky-50/80 hover:border-sky-200 dark:border-sky-900/40 dark:bg-sky-950/20",
+      iconBox:
+        "bg-white text-sky-700 ring-sky-100 dark:bg-slate-900 dark:text-sky-300 dark:ring-sky-900/50",
+      text: "text-sky-700 dark:text-sky-300",
     },
     {
       id: "books",
       title: "Books",
-      icon: <FiBook className="text-xl" />,
-      color:
-        "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600",
-      hover: "hover:bg-gray-300 dark:hover:bg-gray-600",
+      label: "Library resources",
+      icon: <FiBook />,
       link: "/dashboard/books",
+      surface:
+        "border-rose-100 bg-rose-50/80 hover:border-rose-200 dark:border-rose-900/40 dark:bg-rose-950/20",
+      iconBox:
+        "bg-white text-rose-700 ring-rose-100 dark:bg-slate-900 dark:text-rose-300 dark:ring-rose-900/50",
+      text: "text-rose-700 dark:text-rose-300",
     },
   ];
 
   const quickActions = [
     {
-      icon: <FiBookOpen className="text-lg" />,
-      label: "Add New Book",
-      link: "/dashboard/books",
-      bg: "bg-blue-50 dark:bg-blue-800",
-      text: "text-blue-600 dark:text-blue-200",
-      hover: "hover:bg-blue-100 dark:hover:bg-blue-700",
-    },
-    {
-      icon: <FiUsers className="text-lg" />,
-      label: "Register Teacher",
-      link: "/dashboard/teachers",
-      bg: "bg-green-50 dark:bg-green-800",
-      text: "text-green-600 dark:text-green-200",
-      hover: "hover:bg-green-100 dark:hover:bg-green-700",
-    },
-    {
-      icon: <FiHome className="text-lg" />,
+      icon: <FiHome />,
       label: "Create Faculty",
+      description: "Add a new faculty profile",
       link: "/dashboard/faculties",
-      bg: "bg-purple-50 dark:bg-purple-800",
-      text: "text-purple-600 dark:text-purple-200",
-      hover: "hover:bg-purple-100 dark:hover:bg-purple-700",
     },
     {
-      icon: <FiCalendar className="text-lg" />,
-      label: "New Semester",
-      link: "/dashboard/semesters",
-      bg: "bg-amber-50 dark:bg-amber-700",
-      text: "text-amber-600 dark:text-amber-200",
-      hover: "hover:bg-amber-100 dark:hover:bg-amber-600",
+      icon: <MdSchool />,
+      label: "Add Department",
+      description: "Organize departments by faculty",
+      link: "/dashboard/departments",
     },
-  ];
-
-  const tabs = [
     {
-      id: "overview",
-      icon: <FiHome className="mr-2" />,
-      label: "Overview",
+      icon: <FiUsers />,
+      label: "Register Teacher",
+      description: "Save teacher information",
+      link: "/dashboard/teachers",
+    },
+    {
+      icon: <FiBookOpen />,
+      label: "Add Book",
+      description: "Grow the book collection",
+      link: "/dashboard/books",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
-      <header className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-200 sm:text-2xl lg:text-3xl">
-              University Dashboard
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-slate-50 to-teal-50/40 px-4 py-6 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <section className="mb-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/85 shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/80 md:mb-8">
+          <div className="grid gap-0 lg:grid-cols-[1.5fr_0.9fr]">
+            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-teal-900 to-slate-800 p-6 text-white md:p-8">
+              <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-amber-300/20 blur-3xl" />
+              <div className="absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-teal-300/20 blur-3xl" />
 
-            <p className="text-sm text-gray-500 dark:text-gray-300 sm:hidden">
-              Manage university data easily
-            </p>
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-amber-200 shadow-lg ring-1 ring-white/15">
+                    <MdSchool className="text-3xl" />
+                  </span>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-100/80">
+                      Admin Control Center
+                    </p>
+                    <h1 className="mt-1 text-2xl font-black tracking-tight md:text-4xl">
+                      University Dashboard
+                    </h1>
+                  </div>
+                </div>
+
+                <p className="mt-5 max-w-2xl text-sm leading-6 text-stone-200 md:text-base">
+                  Manage academic records with a clean, fast, and modern
+                  dashboard experience.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <NavLink
+                    to="/dashboard/faculties"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-black/10 transition hover:bg-amber-200"
+                  >
+                    <FiPlus />
+                    Start Adding Data
+                  </NavLink>
+
+                  <NavLink
+                    to="/dashboard/books"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
+                  >
+                    View Library
+                    <FiArrowRight />
+                  </NavLink>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200/80 bg-gradient-to-br from-white to-stone-50 p-6 dark:border-slate-700/80 dark:from-slate-900 dark:to-slate-950 md:p-8 lg:border-l lg:border-t-0">
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                Total Records
+              </p>
+
+              <div className="mt-3 flex items-end gap-3">
+                {loading ? (
+                  <div className="h-14 w-28 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+                ) : (
+                  <span className="text-5xl font-black tracking-tight text-slate-900 dark:text-stone-100">
+                    {totalRecords}
+                  </span>
+                )}
+
+                <span className="mb-2 rounded-full bg-teal-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-teal-800 dark:bg-teal-950/65 dark:text-teal-200">
+                  Live Data
+                </span>
+              </div>
+
+              <p className="mt-5 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                This number is calculated from faculties, departments, teachers,
+                semesters, and books stored in your system.
+              </p>
+            </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <div className="mb-6 overflow-x-auto pb-1">
-          <nav className="flex min-w-max gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`flex items-center rounded-lg px-4 py-2 text-sm transition-colors sm:text-base ${
-                  activeTab === tab.id
-                    ? "bg-blue-50 font-medium text-blue-600 dark:bg-blue-800 dark:text-blue-200"
-                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                }`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <motion.div
-          className="mb-8 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
-          variants={statsContainer}
+        <motion.section
+          className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5"
           initial="hidden"
           animate="visible"
+          transition={{ staggerChildren: 0.08 }}
         >
           {stats.map((stat) => (
-            <NavLink to={stat.link} key={stat.id}>
+            <NavLink to={stat.link} key={stat.id} className="group">
               <motion.div
                 variants={cardVariants}
-                whileHover="hover"
-                className={`${stat.color} ${stat.hover} h-full cursor-pointer rounded-xl border transition-colors`}
+                whileHover={{ y: -4 }}
+                className={`h-full rounded-3xl border p-5 shadow-sm shadow-slate-900/5 transition-all hover:shadow-xl hover:shadow-slate-900/10 dark:shadow-black/10 ${stat.surface}`}
               >
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="mb-1 truncate text-sm font-medium opacity-90">
-                        {stat.title}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-600 dark:text-stone-300">
+                      {stat.title}
+                    </p>
+
+                    {loading ? (
+                      <div className="mt-3 h-9 w-16 animate-pulse rounded-xl bg-white/70 dark:bg-slate-800" />
+                    ) : (
+                      <p
+                        className={`mt-2 text-4xl font-black tracking-tight ${stat.text}`}
+                      >
+                        {counts[stat.id]}
                       </p>
+                    )}
 
-                      {loading ? (
-                        <motion.div className="h-7 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
-                      ) : (
-                        <h3 className="text-2xl font-bold sm:text-3xl">
-                          {counts[stat.id as keyof EntityCounts]}
-                        </h3>
-                      )}
-                    </div>
-
-                    <div className="rounded-lg bg-white/60 p-2 dark:bg-gray-800/70">
-                      {stat.icon}
-                    </div>
+                    <p className="mt-1 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {stat.label}
+                    </p>
                   </div>
+
+                  <span
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl shadow-sm ring-1 ${stat.iconBox}`}
+                  >
+                    {stat.icon}
+                  </span>
+                </div>
+
+                <div className="mt-5 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-400 opacity-0 transition group-hover:opacity-100 dark:text-slate-500">
+                  Open
+                  <FiArrowRight />
                 </div>
               </motion.div>
             </NavLink>
           ))}
-        </motion.div>
+        </motion.section>
 
-        <motion.div
-          className="mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-200 sm:text-xl">
-            Quick Actions
-          </h2>
+        <section className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white/85 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/80 md:p-6">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-stone-100">
+                Quick Actions
+              </h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Jump directly to your common admin tasks.
+              </p>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 gap-3 dark:text-gray-300 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
-            {quickActions.map((action, index) => (
-              <NavLink to={action.link} key={index} title={action.label}>
-                <motion.button
-                  type="button"
-                  className={`${action.bg} ${action.hover} flex w-full items-center gap-3 rounded-xl border border-gray-100 p-4 text-left transition-colors dark:border-gray-700 sm:flex-col sm:text-center`}
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <div className={`${action.text} rounded-full p-3`}>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {quickActions.map((action) => (
+              <NavLink
+                to={action.link}
+                key={action.label}
+                className="group rounded-3xl border border-slate-200/70 bg-gradient-to-br from-white via-stone-50 to-teal-50/50 p-4 transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-900/5 dark:border-slate-700/80 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20 dark:hover:border-teal-800/60"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-100/80 text-lg text-teal-700 shadow-inner ring-1 ring-teal-200/70 dark:bg-teal-950/55 dark:text-teal-200 dark:ring-teal-800/50">
                     {action.icon}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900 dark:text-stone-100">
+                      {action.label}
+                    </p>
+                    <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">
+                      {action.description}
+                    </p>
                   </div>
 
-                  <span className="text-sm font-medium sm:text-center">
-                    {action.label}
-                  </span>
-                </motion.button>
+                  <FiArrowRight className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-teal-700 dark:group-hover:text-teal-300" />
+                </div>
               </NavLink>
             ))}
           </div>
-        </motion.div>
-      </main>
+        </section>
+      </div>
     </div>
   );
 };
 
 export default Dashboard;
+
+

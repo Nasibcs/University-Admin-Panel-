@@ -40,6 +40,97 @@ type DeleteTarget = {
   fullName: string;
 } | null;
 
+const API_ORIGIN =
+  typeof import.meta.env.VITE_API_URL === "string" &&
+  import.meta.env.VITE_API_URL.length > 0
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+    : "http://localhost:8081";
+
+const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
+const AVATAR_ACCEPT =
+  "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp";
+
+function validateAvatarFile(file: File): string | null {
+  const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+  if (!allowed.includes(file.type)) {
+    return "Please choose a JPEG, PNG, GIF, or WebP image.";
+  }
+
+  if (file.size > MAX_AVATAR_BYTES) {
+    return `Image must be 3 MB or smaller. Current size is ${Math.round(
+      file.size / 1024
+    )} KB.`;
+  }
+
+  return null;
+}
+
+async function uploadTeacherAvatar(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("file", file);
+
+  const response = await fetch(`${API_ORIGIN}/api/uploads/teacher-avatar`, {
+    method: "POST",
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const data = (await response.json()) as { avatarUrl?: string };
+
+  if (!data.avatarUrl) {
+    throw new Error("Invalid avatar upload response.");
+  }
+
+  return data.avatarUrl;
+}
+
+function resizeAvatarFileToDataUrl(
+  file: File,
+  maxEdge = 420,
+  quality = 0.86
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      let { width, height } = image;
+      const scale = Math.min(1, maxEdge / Math.max(width, height));
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        reject(new Error("Cannot process image."));
+        return;
+      }
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not load the selected image."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
 // ========== LOCAL STORAGE HOOK ==========
 const useLocalStorage = <T,>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] => {
   const [storedValue, setStoredValue] = React.useState<T>(() => {
@@ -321,6 +412,9 @@ const TeachersComponent = () => {
   const [isFormExpanded, setIsFormExpanded] = React.useState(false);
   const [alert, setAlert] = React.useState<AlertMessage>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<DeleteTarget>(null);
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // ========== DERIVED VALUES ==========
   const filteredDepartments = selectedFacultyId 
@@ -351,11 +445,66 @@ const TeachersComponent = () => {
     return () => window.clearTimeout(timer);
   }, [alert]);
 
+  React.useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
   // ========== HANDLERS ==========
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAvatarChange = (list: FileList | null) => {
+    const file = list?.[0];
+
+    if (!file) return;
+
+    const validationMessage = validateAvatarFile(file);
+
+    if (validationMessage) {
+      setAlert({
+        type: "error",
+        title: "Invalid profile photo",
+        message: validationMessage
+      });
+      return;
+    }
+
+    setAvatarPreviewUrl(prev => {
+      if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setAvatarFile(file);
+  };
+
+  const clearAvatar = () => {
+    setAvatarPreviewUrl(prev => {
+      if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return "";
+    });
+    setAvatarFile(null);
+    setFormData(prev => ({
+      ...prev,
+      avatarUrl: ""
+    }));
+  };
+
+  const resolveAvatarUrl = async () => {
+    if (!avatarFile) return formData.avatarUrl;
+
+    try {
+      return await uploadTeacherAvatar(avatarFile);
+    } catch {
+      return await resizeAvatarFileToDataUrl(avatarFile);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      setIsSubmitting(true);
+
       if (!selectedFacultyId) {
         setAlert({
           type: "error",
@@ -386,12 +535,15 @@ const TeachersComponent = () => {
         return;
       }
 
+      const avatarUrl = await resolveAvatarUrl();
+
       const teacher: Teacher = {
         id: editingId || uuid(),
         departmentId: selectedDepartmentId,
         departmentName: department.name,
         facultyName: faculty.name,
-        ...formData
+        ...formData,
+        avatarUrl
       };
 
       setTeachers(prevTeachers =>
@@ -416,6 +568,8 @@ const TeachersComponent = () => {
         title: "Something went wrong",
         message: "Teacher information could not be saved. Please try again."
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -442,6 +596,11 @@ const TeachersComponent = () => {
         age: teacher.age,
         avatarUrl: teacher.avatarUrl || ""
       });
+      setAvatarPreviewUrl(prev => {
+        if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+        return teacher.avatarUrl || "";
+      });
+      setAvatarFile(null);
       setSelectedDepartmentId(teacher.departmentId);
       setSelectedFacultyId(
         departments.find(d => d.id === teacher.departmentId)?.facultyId || ""
@@ -509,6 +668,11 @@ const TeachersComponent = () => {
   };
 
   const resetForm = () => {
+    setAvatarPreviewUrl(prev => {
+      if (prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return "";
+    });
+    setAvatarFile(null);
     setFormData({
       fullName: "",
       email: "",
@@ -521,6 +685,7 @@ const TeachersComponent = () => {
     });
     setEditingId(null);
     setIsFormExpanded(false);
+    setIsSubmitting(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -714,14 +879,64 @@ const TeachersComponent = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-stone-200 mb-1">Avatar URL (optional)</label>
-              <input
-                type="text"
-                name="avatarUrl"
-                value={formData.avatarUrl}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-200/90 dark:border-slate-700 rounded-md shadow-sm focus:ring-teal-600/25 focus:border-teal-600 dark:bg-slate-800/80 dark:text-stone-100 text-sm md:text-base"
-              />
+              <span className="block text-sm font-medium text-slate-700 dark:text-stone-200 mb-1">
+                Profile Photo
+              </span>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-dashed border-slate-300/90 bg-white/70 p-3 dark:border-slate-700 dark:bg-slate-800/60 sm:flex-row sm:items-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-slate-100 shadow dark:border-slate-700 dark:bg-slate-900">
+                  {avatarPreviewUrl ? (
+                    <img
+                      src={avatarPreviewUrl}
+                      alt="Teacher profile preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-9 w-9 text-slate-400 dark:text-stone-400"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 2.24-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.76-3.58-5-8-5Z" />
+                    </svg>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-stone-100">
+                    Upload teacher profile picture
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-stone-300">
+                    PNG, JPEG, GIF, or WebP. Max 3 MB.
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <label className="cursor-pointer rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800">
+                      {avatarPreviewUrl ? "Change Photo" : "Choose Photo"}
+                      <input
+                        type="file"
+                        accept={AVATAR_ACCEPT}
+                        className="sr-only"
+                        onChange={(e) => {
+                          handleAvatarChange(e.target.files);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+
+                    {avatarPreviewUrl && (
+                      <button
+                        type="button"
+                        onClick={clearAvatar}
+                        className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200 dark:hover:bg-red-950/60"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -737,12 +952,12 @@ const TeachersComponent = () => {
             )}
             <button
               type="submit"
-              disabled={!selectedDepartmentId}
+              disabled={!selectedDepartmentId || isSubmitting}
               className={`px-3 py-1 md:px-4 md:py-2 bg-teal-700 text-white rounded-md hover:bg-teal-800 text-sm md:text-base ${
-                !selectedDepartmentId ? "opacity-50 cursor-not-allowed" : ""
+                !selectedDepartmentId || isSubmitting ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {editingId ? "Update" : "Add Teacher"}
+              {isSubmitting ? "Saving..." : editingId ? "Update" : "Add Teacher"}
             </button>
           </div>
         </form>
@@ -789,4 +1004,4 @@ const TeachersComponent = () => {
   );
 };
 
-export default TeachersComponent;
+export default TeachersComponent; 

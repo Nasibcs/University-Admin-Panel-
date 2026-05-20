@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBook, FaCalendarAlt, FaChalkboardTeacher, FaEdit, FaTrash, FaUniversity, FaGraduationCap } from "react-icons/fa";
 
@@ -34,6 +33,48 @@ type DeleteTarget = {
   id: string;
   name: string;
 } | null;
+
+const API_ORIGIN =
+  typeof import.meta.env.VITE_API_URL === "string" && import.meta.env.VITE_API_URL.length > 0
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+    : "http://localhost:8081";
+
+const FACULTY_LOCAL_CACHE_KEY = "faculties";
+const DEPARTMENT_LOCAL_CACHE_KEY = "departments";
+const SEMESTER_LOCAL_CACHE_KEY = "semesters";
+
+function syncLocalCache<T>(key: string, list: T[]) {
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function readLocalCache<T>(key: string, fallback: T): T {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? (JSON.parse(item) as T) : fallback;
+  } catch (error) {
+    console.error(`Error reading ${key} from localStorage:`, error);
+    return fallback;
+  }
+}
+
+async function parseApiError(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const j = JSON.parse(text) as { message?: string; errors?: Record<string, string> };
+    if (j.message && j.errors && Object.keys(j.errors).length > 0) {
+      const parts = Object.entries(j.errors).map(([k, v]) => `${k}: ${v}`);
+      return `${j.message} - ${parts.join(" / ")}`;
+    }
+    if (j.message) return j.message;
+  } catch {
+    /* plain text body */
+  }
+  return text.trim() || `HTTP ${res.status}`;
+}
 
 const AlertBox = ({ alert, onClose }: { alert: AlertMessage; onClose: () => void }) => {
   if (!alert) return null;
@@ -178,6 +219,7 @@ const SemesterComponent = () => {
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   const [alert, setAlert] = useState<AlertMessage>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<Omit<Semester, 'id' | 'books'> & { books: string }>({
     name: "",
@@ -193,21 +235,51 @@ const SemesterComponent = () => {
 
   const [editId, setEditId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const savedFaculties = localStorage.getItem("faculties");
-    const savedDepartments = localStorage.getItem("departments");
-    const savedSemesters = localStorage.getItem("semesters");
-    const savedTeachers = localStorage.getItem("teachers");
+  const loadFaculties = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/faculties`);
+      if (!res.ok) throw new Error(await parseApiError(res));
+      const list = (await res.json()) as Faculty[];
+      setFaculties(list);
+      syncLocalCache(FACULTY_LOCAL_CACHE_KEY, list);
+    } catch (error) {
+      console.error("Faculty API error:", error);
+      setFaculties(readLocalCache<Faculty[]>(FACULTY_LOCAL_CACHE_KEY, []));
+    }
+  }, []);
 
-    if (savedFaculties) setFaculties(JSON.parse(savedFaculties));
-    if (savedDepartments) setDepartments(JSON.parse(savedDepartments));
-    if (savedSemesters) setSemesters(JSON.parse(savedSemesters));
-    if (savedTeachers) setTeachers(JSON.parse(savedTeachers));
+  const loadDepartments = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/departments`);
+      if (!res.ok) throw new Error(await parseApiError(res));
+      const list = (await res.json()) as Department[];
+      setDepartments(list);
+      syncLocalCache(DEPARTMENT_LOCAL_CACHE_KEY, list);
+    } catch (error) {
+      console.error("Department API error:", error);
+      setDepartments(readLocalCache<Department[]>(DEPARTMENT_LOCAL_CACHE_KEY, []));
+    }
+  }, []);
+
+  const loadSemesters = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/semesters`);
+      if (!res.ok) throw new Error(await parseApiError(res));
+      const list = (await res.json()) as Semester[];
+      setSemesters(list);
+      syncLocalCache(SEMESTER_LOCAL_CACHE_KEY, list);
+    } catch (error) {
+      console.error("Semester API error:", error);
+      setSemesters(readLocalCache<Semester[]>(SEMESTER_LOCAL_CACHE_KEY, []));
+    }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("semesters", JSON.stringify(semesters));
-  }, [semesters]);
+    loadFaculties();
+    loadDepartments();
+    loadSemesters();
+    setTeachers(readLocalCache<Teacher[]>("teachers", []));
+  }, [loadFaculties, loadDepartments, loadSemesters]);
 
   useEffect(() => {
     if (!alert) return;
@@ -225,10 +297,30 @@ const SemesterComponent = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === "facultyId" ? { departmentId: "" } : {})
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      year: "",
+      semester: "",
+      books: "",
+      description: "",
+      facultyId: "",
+      departmentId: "",
+      startDate: "",
+      endDate: ""
+    });
+    setEditId(null);
+    setIsFormExpanded(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.year || !formData.semester || !formData.facultyId || !formData.departmentId) {
@@ -236,45 +328,45 @@ const SemesterComponent = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const semesterName = formData.name.trim();
-      const updatedSemester: Semester = {
-        id: editId || uuid(),
+      const payload = {
         name: semesterName,
-        year: formData.year,
-        semester: formData.semester,
+        year: formData.year.trim(),
+        semester: formData.semester.trim(),
         books: formData.books.split(",").map((b) => b.trim()).filter(Boolean),
-        description: formData.description,
+        description: formData.description.trim(),
         facultyId: formData.facultyId,
         departmentId: formData.departmentId,
-        startDate: formData.startDate,
-        endDate: formData.endDate
+        startDate: formData.startDate || "",
+        endDate: formData.endDate || ""
       };
 
+      const res = await fetch(
+        editId ? `${API_ORIGIN}/api/semesters/${editId}` : `${API_ORIGIN}/api/semesters`,
+        {
+          method: editId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!res.ok) throw new Error(await parseApiError(res));
+      await loadSemesters();
+
       if (editId) {
-        setSemesters((prev) => prev.map((s) => (s.id === editId ? updatedSemester : s)));
-        setEditId(null);
         showToast("success", "Semester updated successfully", `${semesterName} has been updated successfully.`);
       } else {
-        setSemesters((prev) => [...prev, updatedSemester]);
         showToast("success", "Semester added successfully", `${semesterName} has been added to the semester list.`);
       }
 
-      setFormData({
-        name: "",
-        year: "",
-        semester: "",
-        books: "",
-        description: "",
-        facultyId: "",
-        departmentId: "",
-        startDate: "",
-        endDate: ""
-      });
-      setIsFormExpanded(false);
+      resetForm();
     } catch (error) {
       console.error("Semester save error:", error);
-      showToast("error", "Semester save failed", "Semester could not be saved. Please try again.");
+      showToast("error", "Semester save failed", error instanceof Error ? error.message : "Semester could not be saved. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -299,29 +391,20 @@ const SemesterComponent = () => {
     setDeleteTarget({ id: semester.id, name: semester.name });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
 
     try {
-      setSemesters((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      const res = await fetch(`${API_ORIGIN}/api/semesters/${deleteTarget.id}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 404) throw new Error(await parseApiError(res));
+      await loadSemesters();
       if (editId === deleteTarget.id) {
-        setEditId(null);
-        setFormData({
-          name: "",
-          year: "",
-          semester: "",
-          books: "",
-          description: "",
-          facultyId: "",
-          departmentId: "",
-          startDate: "",
-          endDate: ""
-        });
+        resetForm();
       }
       showToast("success", "Semester deleted successfully", `${deleteTarget.name} has been deleted from the semester list.`);
     } catch (error) {
       console.error("Semester delete error:", error);
-      showToast("error", "Semester delete failed", "Semester could not be deleted. Please try again.");
+      showToast("error", "Semester delete failed", error instanceof Error ? error.message : "Semester could not be deleted. Please try again.");
     } finally {
       setDeleteTarget(null);
     }
@@ -459,7 +542,7 @@ const SemesterComponent = () => {
                     name="year"
                     value={formData.year}
                     onChange={handleInputChange}
-                    placeholder="e.g., 2023-2024"
+                    placeholder="e.g., 2023 or 2023-2024"
                     className="w-full border border-slate-200/90 dark:border-slate-700 rounded-md px-3 py-2 shadow-sm focus:ring-teal-600/25 focus:border-teal-600 dark:bg-slate-800/80 dark:text-stone-100 text-sm md:text-base"
                   />
                 </div>
@@ -530,32 +613,19 @@ const SemesterComponent = () => {
               <div className="grid grid-cols-1 gap-2">
                 <button
                   type="submit"
-                  disabled={!formData.departmentId}
+                  disabled={!formData.departmentId || isSubmitting}
                   className={`w-full py-2 px-4 rounded-md text-white font-medium text-sm md:text-base transition-colors ${
                     editId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-teal-700 hover:bg-teal-800'
-                  } disabled:opacity-50`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {editId ? 'Update Semester' : 'Add Semester'}
+                  {isSubmitting ? 'Saving...' : editId ? 'Update Semester' : 'Add Semester'}
                 </button>
 
                 {editId && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditId(null);
-                      setFormData({
-                        name: "",
-                        year: "",
-                        semester: "",
-                        books: "",
-                        description: "",
-                        facultyId: "",
-                        departmentId: "",
-                        startDate: "",
-                        endDate: ""
-                      });
-                      setIsFormExpanded(false);
-                    }}
+                    onClick={resetForm}
+                    disabled={isSubmitting}
                     className="w-full py-2 px-4 rounded-md border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-stone-200 font-medium hover:bg-stone-50/90 dark:hover:bg-slate-800/80 text-sm md:text-base"
                   >
                     Cancel

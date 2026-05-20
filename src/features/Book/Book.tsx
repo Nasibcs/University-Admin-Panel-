@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
+import { useCallback, useEffect, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import {
   FaBook,
   FaPen,
@@ -9,6 +9,12 @@ import {
   FaCalendarAlt,
   FaTimes
 } from "react-icons/fa";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
+const BOOKS_CACHE_KEY = "books";
+const FACULTIES_CACHE_KEY = "faculties";
+const DEPARTMENTS_CACHE_KEY = "departments";
+const SEMESTERS_CACHE_KEY = "semesters";
 
 // ========== TYPES ==========
 interface Book {
@@ -39,6 +45,7 @@ interface Department {
 interface Semester {
   id: string;
   name: string;
+  facultyId: string;
   departmentId: string;
 }
 
@@ -52,6 +59,62 @@ type DeleteBookTarget = {
   id: string;
   name: string;
 } | null;
+
+const readCache = <T,>(key: string, fallback: T): T => {
+  try {
+    const cached = localStorage.getItem(key);
+    return cached ? JSON.parse(cached) : fallback;
+  } catch (error) {
+    console.error(`Error reading ${key} cache:`, error);
+    return fallback;
+  }
+};
+
+const writeCache = <T,>(key: string, value: T) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error saving ${key} cache:`, error);
+  }
+};
+
+const parseApiError = async (response: Response) => {
+  const fallback = `Request failed with status ${response.status}`;
+  const text = await response.text();
+  if (!text) return fallback;
+
+  try {
+    const data = JSON.parse(text) as { message?: string; errors?: Record<string, string> };
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      return `${data.message || "Validation failed"} - ${Object.entries(data.errors)
+        .map(([field, message]) => `${field}: ${message}`)
+        .join(", ")}`;
+    }
+    return data.message || fallback;
+  } catch {
+    return text;
+  }
+};
+
+const uploadBookCover = async (file: File) => {
+  const body = new FormData();
+  body.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/uploads/book-cover`, {
+    method: "POST",
+    body
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  const data = await response.json() as { coverUrl?: string };
+  if (!data.coverUrl) {
+    throw new Error("Book cover upload failed");
+  }
+  return data.coverUrl;
+};
 
 // ========== ALERT COMPONENT ==========
 const AlertBox = ({
@@ -209,12 +272,13 @@ const DeleteBookConfirmModal = ({
 
 // ========== BOOK FORM ==========
 interface BookFormProps {
-  onSave: (book: Book) => void;
+  onSave: (book: Omit<Book, "id">) => Promise<void>;
   ingBook: Book | null;
   selectedFaculty: string;
   selectedDepartment: string;
   selectedSemester: string;
   onCancel: () => void;
+  onError: (message: string) => void;
 }
 
 const BookForm = ({
@@ -223,8 +287,11 @@ const BookForm = ({
   selectedFaculty,
   selectedDepartment,
   selectedSemester,
-  onCancel
+  onCancel,
+  onError
 }: BookFormProps) => {
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
   const [formData, setFormData] = useState<Omit<Book, "id">>({
     name: "",
     author: "",
@@ -241,6 +308,8 @@ const BookForm = ({
   useEffect(() => {
     if (ingBook) {
       setFormData(ingBook);
+      setCoverFile(null);
+      setCoverPreview(ingBook.thumbnail || "");
     } else {
       setFormData({
         name: "",
@@ -254,29 +323,69 @@ const BookForm = ({
         ion: "",
         publicationYear: ""
       });
+      setCoverFile(null);
+      setCoverPreview("");
     }
   }, [ingBook, selectedFaculty, selectedDepartment, selectedSemester]);
 
+  useEffect(() => {
+    return () => {
+      if (coverPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(coverPreview);
+      }
+    };
+  }, [coverPreview]);
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCoverChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setCoverFile(null);
+      setCoverPreview(formData.thumbnail);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      onError("Please choose a JPEG, PNG, GIF or WebP image.");
+      e.target.value = "";
+      return;
+    }
+
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.author) return;
 
-    const book: Book = {
+    let thumbnail = formData.thumbnail;
+    try {
+      thumbnail = coverFile ? await uploadBookCover(coverFile) : formData.thumbnail;
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "Book cover could not be uploaded.");
+      return;
+    }
+
+    const book: Omit<Book, "id"> = {
       ...formData,
-      id: ingBook?.id || uuid(),
+      thumbnail,
       facultyId: selectedFaculty,
       departmentId: selectedDepartment,
       semesterId: selectedSemester
     };
 
-    onSave(book);
+    try {
+      await onSave(book);
+    } catch {
+      return;
+    }
 
     if (!ingBook) {
       setFormData({
@@ -291,6 +400,8 @@ const BookForm = ({
         ion: "",
         publicationYear: ""
       });
+      setCoverFile(null);
+      setCoverPreview("");
     }
   };
 
@@ -380,15 +491,30 @@ const BookForm = ({
 
         <div className="md:col-span-2">
           <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-stone-200">
-            Cover Image URL
+            Cover Image
           </label>
-          <input
-            name="thumbnail"
-            value={formData.thumbnail}
-            onChange={handleChange}
-            placeholder="https://example.com/book-cover.jpg"
-            className="w-full rounded-md border border-slate-200/90 px-3 py-2 text-sm shadow-sm focus:border-teal-600 focus:ring-teal-600/25 dark:border-slate-700 dark:bg-slate-800/80 dark:text-stone-100 md:text-base"
-          />
+          <div className="flex flex-col gap-3 rounded-md border border-slate-200/90 bg-white px-3 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 sm:flex-row sm:items-center">
+            <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-stone-50 dark:border-slate-700 dark:bg-slate-900">
+              {coverPreview || formData.thumbnail ? (
+                <img
+                  src={coverPreview || formData.thumbnail}
+                  alt="Book cover preview"
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/150x200?text=No+Cover";
+                  }}
+                />
+              ) : (
+                <FaBook className="text-3xl text-amber-400" />
+              )}
+            </div>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleCoverChange}
+              className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-teal-700 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-teal-800 dark:text-stone-200"
+            />
+          </div>
         </div>
 
         <div className="md:col-span-2">
@@ -546,10 +672,12 @@ const BookList = ({ books, on, onDelete }: BookListProps) => {
 
 // ========== MAIN COMPONENT ==========
 const Book = () => {
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [semesters, setSemesters] = useState<Semester[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>(() => readCache<Faculty[]>(FACULTIES_CACHE_KEY, []));
+  const [departments, setDepartments] = useState<Department[]>(() =>
+    readCache<Department[]>(DEPARTMENTS_CACHE_KEY, [])
+  );
+  const [semesters, setSemesters] = useState<Semester[]>(() => readCache<Semester[]>(SEMESTERS_CACHE_KEY, []));
+  const [books, setBooks] = useState<Book[]>(() => readCache<Book[]>(BOOKS_CACHE_KEY, []));
 
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -559,21 +687,60 @@ const Book = () => {
   const [alert, setAlert] = useState<AlertMessage>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteBookTarget>(null);
 
-  useEffect(() => {
-    const f = localStorage.getItem("faculties");
-    const d = localStorage.getItem("departments");
-    const s = localStorage.getItem("semesters");
-    const b = localStorage.getItem("books");
+  const loadFaculties = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/faculties`);
+      if (!response.ok) throw new Error(await parseApiError(response));
+      const data = await response.json() as Faculty[];
+      setFaculties(data);
+      writeCache(FACULTIES_CACHE_KEY, data);
+    } catch (error) {
+      console.error("Faculty API error:", error);
+    }
+  }, []);
 
-    if (f) setFaculties(JSON.parse(f));
-    if (d) setDepartments(JSON.parse(d));
-    if (s) setSemesters(JSON.parse(s));
-    if (b) setBooks(JSON.parse(b));
+  const loadDepartments = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/departments`);
+      if (!response.ok) throw new Error(await parseApiError(response));
+      const data = await response.json() as Department[];
+      setDepartments(data);
+      writeCache(DEPARTMENTS_CACHE_KEY, data);
+    } catch (error) {
+      console.error("Department API error:", error);
+    }
+  }, []);
+
+  const loadSemesters = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/semesters`);
+      if (!response.ok) throw new Error(await parseApiError(response));
+      const data = await response.json() as Semester[];
+      setSemesters(data);
+      writeCache(SEMESTERS_CACHE_KEY, data);
+    } catch (error) {
+      console.error("Semester API error:", error);
+    }
+  }, []);
+
+  const loadBooks = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/books`);
+      if (!response.ok) throw new Error(await parseApiError(response));
+      const data = await response.json() as Book[];
+      setBooks(data);
+      writeCache(BOOKS_CACHE_KEY, data);
+    } catch (error) {
+      console.error("Book API error:", error);
+    }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("books", JSON.stringify(books));
-  }, [books]);
+    void loadFaculties();
+    void loadDepartments();
+    void loadSemesters();
+    void loadBooks();
+  }, [loadBooks, loadDepartments, loadFaculties, loadSemesters]);
 
   useEffect(() => {
     if (!alert) return;
@@ -585,22 +752,39 @@ const Book = () => {
     return () => window.clearTimeout(timer);
   }, [alert]);
 
-  const handleSave = (book: Book) => {
-    setBooks(prev =>
-      prev.some(b => b.id === book.id)
-        ? prev.map(b => (b.id === book.id ? book : b))
-        : [...prev, book]
-    );
+  const handleSave = async (book: Omit<Book, "id">) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/books${ingBook ? `/${ingBook.id}` : ""}`, {
+        method: ingBook ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(book)
+      });
 
-    setAlert({
-      type: "success",
-      title: ingBook ? "Book updated successfully" : "Book added successfully",
-      message: ingBook
-        ? `${book.name} has been updated successfully.`
-        : `${book.name} has been added successfully.`
-    });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response));
+      }
 
-    setingBook(null);
+      const savedBook = await response.json() as Book;
+      await loadBooks();
+
+      setAlert({
+        type: "success",
+        title: ingBook ? "Book updated successfully" : "Book added successfully",
+        message: ingBook
+          ? `${savedBook.name} has been updated successfully.`
+          : `${savedBook.name} has been added successfully.`
+      });
+
+      setingBook(null);
+    } catch (error) {
+      console.error("Book save error:", error);
+      setAlert({
+        type: "error",
+        title: "Book save failed",
+        message: error instanceof Error ? error.message : "Book could not be saved. Please try again."
+      });
+      throw error;
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -621,11 +805,19 @@ const Book = () => {
     });
   };
 
-  const confirmDeleteBook = () => {
+  const confirmDeleteBook = async () => {
     if (!deleteTarget) return;
 
     try {
-      setBooks(prev => prev.filter(b => b.id !== deleteTarget.id));
+      const response = await fetch(`${API_BASE_URL}/api/books/${deleteTarget.id}`, {
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response));
+      }
+
+      await loadBooks();
 
       if (ingBook?.id === deleteTarget.id) {
         setingBook(null);
@@ -638,11 +830,12 @@ const Book = () => {
       });
 
       setDeleteTarget(null);
-    } catch {
+    } catch (error) {
+      console.error("Book delete error:", error);
       setAlert({
         type: "error",
         title: "Delete failed",
-        message: "Book could not be deleted. Please try again."
+        message: error instanceof Error ? error.message : "Book could not be deleted. Please try again."
       });
 
       setDeleteTarget(null);
@@ -778,6 +971,11 @@ const Book = () => {
                 selectedDepartment={selectedDepartment}
                 selectedSemester={selectedSemester}
                 onCancel={() => setingBook(null)}
+                onError={(message) => setAlert({
+                  type: "error",
+                  title: "Cover upload failed",
+                  message
+                })}
               />
 
               <BookList

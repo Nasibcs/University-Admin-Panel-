@@ -4,17 +4,58 @@ import { FaBars, FaTimes, FaUserCircle, FaBook, FaGraduationCap, FaChalkboardTea
 import { MdDashboard, MdLibraryBooks, MdSchool, MdSettings } from "react-icons/md";
 import DarkModeNew from "../components/DarkModeNew";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
+
 interface AdminProfile {
   username: string;
   email: string;
   profilePicture: string;
 }
 
+const parseApiError = async (response: Response) => {
+  const fallback = `Request failed with status ${response.status}`;
+  const text = await response.text();
+  if (!text) return fallback;
+
+  try {
+    const data = JSON.parse(text) as { message?: string; errors?: Record<string, string> };
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      return `${data.message || "Validation failed"} - ${Object.entries(data.errors)
+        .map(([field, message]) => `${field}: ${message}`)
+        .join(", ")}`;
+    }
+    return data.message || fallback;
+  } catch {
+    return text;
+  }
+};
+
+const uploadAdminAvatar = async (file: File) => {
+  const body = new FormData();
+  body.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/uploads/admin-avatar`, {
+    method: "POST",
+    body
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  const data = await response.json() as { avatarUrl?: string };
+  if (!data.avatarUrl) {
+    throw new Error("Profile picture upload failed.");
+  }
+  return data.avatarUrl;
+};
+
 const AdminLayout = () => {
   const navigate = useNavigate();
   const isAuthenticated = localStorage.getItem("admin-token");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,6 +65,7 @@ const AdminLayout = () => {
     profilePicture: ""
   });
   const [tempProfile, setTempProfile] = useState<AdminProfile>({ ...profile });
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(Date.now());
   const sidebarRef = useRef(null);
   const modalRef = useRef(null);
@@ -37,6 +79,22 @@ const AdminLayout = () => {
       setProfile(JSON.parse(savedProfile));
       setTempProfile(JSON.parse(savedProfile));
     }
+    fetch(`${API_BASE_URL}/api/admin/profile`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(await parseApiError(response));
+        return response.json() as Promise<AdminProfile>;
+      })
+      .then((data) => {
+        const loadedProfile = {
+          username: data.username,
+          email: data.email,
+          profilePicture: data.profilePicture || ""
+        };
+        setProfile(loadedProfile);
+        setTempProfile(loadedProfile);
+        localStorage.setItem("admin-profile", JSON.stringify(loadedProfile));
+      })
+      .catch((error) => console.error("Admin profile load error:", error));
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
@@ -62,6 +120,12 @@ const AdminLayout = () => {
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith("image/")) {
+        alert("Please choose a JPEG, PNG, GIF or WebP image.");
+        return;
+      }
+      setProfilePictureFile(file);
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
@@ -75,31 +139,78 @@ const AdminLayout = () => {
     }
   };
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (currentPassword || newPassword || confirmPassword) {
+
+    setProfileSaving(true);
+
+    try {
+      let profilePicture = tempProfile.profilePicture;
+      if (profilePictureFile) {
+        profilePicture = await uploadAdminAvatar(profilePictureFile);
+      }
+
+      const profileResponse = await fetch(`${API_BASE_URL}/api/admin/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: tempProfile.username,
+          email: tempProfile.email,
+          profilePicture
+        })
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error(await parseApiError(profileResponse));
+      }
+
+      const updatedProfile = await profileResponse.json() as AdminProfile;
+
+      if (currentPassword || newPassword || confirmPassword) {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          throw new Error("Please fill all password fields.");
+        }
       if (newPassword !== confirmPassword) {
-        alert("New passwords don't match!");
-        return;
+          throw new Error("New passwords don't match!");
       }
       if (newPassword.length < 8) {
-        alert("Password must be at least 8 characters long");
-        return;
+          throw new Error("Password must be at least 8 characters long");
+        }
+        const passwordResponse = await fetch(`${API_BASE_URL}/api/admin/password`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        if (!passwordResponse.ok) {
+          throw new Error(await parseApiError(passwordResponse));
+        }
+        alert("Profile and password updated successfully!");
+      } else {
+        alert("Profile updated successfully!");
       }
-      alert("Password changed successfully!");
+
+      const normalizedProfile = {
+        username: updatedProfile.username,
+        email: updatedProfile.email,
+        profilePicture: updatedProfile.profilePicture || ""
+      };
+      setProfile(normalizedProfile);
+      setTempProfile(normalizedProfile);
+      localStorage.setItem("admin-profile", JSON.stringify(normalizedProfile));
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setProfilePictureFile(null);
+      setProfileModalOpen(false);
+      setFileInputKey(Date.now());
+    } catch (error) {
+      console.error("Admin profile update error:", error);
+      alert(error instanceof Error ? error.message : "Profile could not be saved. Please try again.");
+    } finally {
+      setProfileSaving(false);
     }
-    
-    const updatedProfile = { ...tempProfile };
-    setProfile(updatedProfile);
-    localStorage.setItem("admin-profile", JSON.stringify(updatedProfile));
-    
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    
-    setProfileModalOpen(false);
-    setFileInputKey(Date.now());
   };
 
   const sidebarNavClass = ({ isActive }: { isActive: boolean }) =>
@@ -111,11 +222,11 @@ const AdminLayout = () => {
     ].join(" ");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-stone-100 dark:bg-slate-950">
+    <div className="min-h-screen overflow-x-hidden bg-stone-100 dark:bg-slate-950">
       {/* Sidebar */}
     <aside
   ref={sidebarRef}
-  className={`fixed left-0 top-0 z-40 flex h-full w-64 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-teal-950 shadow-xl shadow-slate-900/35 ring-1 ring-white/[0.06] md:translate-x-0 md:static ${
+  className={`scrollbar-hidden fixed inset-y-0 left-0 z-40 flex w-64 max-w-[85vw] flex-col overflow-y-auto overflow-x-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-teal-950 shadow-xl shadow-slate-900/35 ring-1 ring-white/[0.06] lg:translate-x-0 ${
     sidebarOpen ? "translate-x-0" : "-translate-x-full"
   } transform transition-transform duration-300 ease-out`}
 >
@@ -190,26 +301,35 @@ const AdminLayout = () => {
   </div>
 </aside>
 
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-30 bg-slate-950/45 backdrop-blur-[1px] lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden transition-[margin] duration-300 lg:ml-64">
         {/* Mobile Header */} 
-        <header className="flex items-center justify-between border-b border-slate-200/90 bg-white/95 p-4 shadow-sm shadow-slate-900/[0.03] backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 md:hidden">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-4 py-3 shadow-sm shadow-slate-900/[0.03] backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 sm:px-5 lg:hidden">
           <button 
             onClick={toggleSidebar} 
             type="button"
-            className="rounded-full p-2 text-xl text-teal-800 transition-colors hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-slate-800"
+            className="shrink-0 rounded-full p-2 text-xl text-teal-800 transition-colors hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-slate-800"
           >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
-          <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-stone-100">
+          <h2 className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-800 dark:text-stone-100">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-amber-400 ring-1 ring-amber-500/25"><FaUniversity className="text-sm" /></span>
-            Admin
+            <span className="truncate">Admin</span>
           </h2>
      
           <button 
             onClick={handleLogout} 
             type="button"
-            className="rounded-lg bg-red-700 px-3 py-1.5 text-sm font-semibold text-white shadow shadow-red-900/25 transition-colors hover:bg-red-800"
+            className="shrink-0 rounded-lg bg-red-700 px-3 py-1.5 text-sm font-semibold text-white shadow shadow-red-900/25 transition-colors hover:bg-red-800"
           >
             Logout
           </button>
@@ -217,16 +337,16 @@ const AdminLayout = () => {
         </header>
          
         {/* Desktop Header */}
-        <header className="hidden md:flex items-center justify-between border-b border-slate-200/90 bg-white/95 px-6 py-4 shadow-sm shadow-slate-900/[0.04] backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
-          <h2 className="flex items-center gap-3 text-xl font-semibold tracking-tight text-slate-900 dark:text-stone-100">
+        <header className="sticky top-0 z-20 hidden items-center justify-between gap-6 border-b border-slate-200/90 bg-white/95 px-6 py-4 shadow-sm shadow-slate-900/[0.04] backdrop-blur dark:border-slate-700 dark:bg-slate-900/85 lg:flex xl:px-8">
+          <h2 className="flex min-w-0 items-center gap-3 text-xl font-semibold tracking-tight text-slate-900 dark:text-stone-100">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-lg text-amber-400 shadow-md ring-1 ring-amber-500/25">
               <FaUniversity aria-hidden />
             </span>
-            <span>Administration</span>
+            <span className="truncate">Administration</span>
           </h2>
-          <div className="flex items-center gap-6">
+          <div className="flex shrink-0 items-center gap-4 xl:gap-6">
             <div 
-              className="flex cursor-pointer items-center gap-3 rounded-xl border border-transparent p-2 pl-6 transition-colors hover:border-slate-200 hover:bg-stone-50 dark:border-transparent dark:hover:border-slate-600 dark:hover:bg-slate-800/70"
+              className="flex cursor-pointer items-center gap-3 rounded-xl border border-transparent p-2 pl-4 transition-colors hover:border-slate-200 hover:bg-stone-50 dark:border-transparent dark:hover:border-slate-600 dark:hover:bg-slate-800/70 xl:pl-6"
               onClick={() => setProfileModalOpen(true)}
               onKeyDown={(e) => e.key === "Enter" && setProfileModalOpen(true)}
               role="button"
@@ -261,8 +381,8 @@ const AdminLayout = () => {
         </header>
          
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-stone-100 via-slate-50 to-stone-100 p-4 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-br from-stone-100 via-slate-50 to-stone-100 p-3 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 sm:p-4 md:p-5 lg:p-6 xl:p-8">
+          <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden">
             <Outlet />
           </div>
         </main>
@@ -270,10 +390,10 @@ const AdminLayout = () => {
 
       {/* Profile Settings Modal */}
       {profileModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black bg-opacity-50 p-4">
           <div 
             ref={modalRef}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto overflow-x-hidden rounded-lg bg-white shadow-xl dark:bg-gray-800"
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -380,6 +500,7 @@ const AdminLayout = () => {
                     onClick={() => {
                       setProfileModalOpen(false);
                       setTempProfile({ ...profile });
+                      setProfilePictureFile(null);
                       setCurrentPassword("");
                       setNewPassword("");
                       setConfirmPassword("");
@@ -390,10 +511,11 @@ const AdminLayout = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 font-semibold text-white shadow-md shadow-teal-900/25 transition-colors hover:bg-teal-800"
+                    disabled={profileSaving}
+                    className="flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 font-semibold text-white shadow-md shadow-teal-900/25 transition-colors hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <FaSave />
-                    Save Changes
+                    {profileSaving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>

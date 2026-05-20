@@ -1,6 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
+
+const parseApiError = async (response: Response) => {
+  const fallback = `Request failed with status ${response.status}`;
+  const text = await response.text();
+  if (!text) return fallback;
+
+  try {
+    const data = JSON.parse(text) as { message?: string; errors?: Record<string, string> };
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      return `${data.message || "Validation failed"} - ${Object.entries(data.errors)
+        .map(([field, message]) => `${field}: ${message}`)
+        .join(", ")}`;
+    }
+    return data.message || fallback;
+  } catch {
+    return text;
+  }
+};
+
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -74,21 +94,27 @@ const LoginPage = () => {
     setErrors((prev) => ({ ...prev, form: "" }));
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
 
-      if (username === "nasib" && password === "nasib") {
-        localStorage.setItem("admin-token", "admin-auth-token");
-        navigate("/dashboard");
-      } else {
-        setErrors((prev) => ({
-          ...prev,
-          form: "Invalid username or password. Please try again.",
-        }));
+      if (!response.ok) {
+        throw new Error(await parseApiError(response));
       }
-    } catch {
+
+      const data = await response.json() as {
+        token: string;
+        profile: { username: string; email: string; profilePicture: string };
+      };
+      localStorage.setItem("admin-token", data.token);
+      localStorage.setItem("admin-profile", JSON.stringify(data.profile));
+      navigate("/dashboard");
+    } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        form: "An error occurred. Please try again later.",
+        form: error instanceof Error ? error.message : "An error occurred. Please try again later.",
       }));
     } finally {
       setIsLoading(false);
